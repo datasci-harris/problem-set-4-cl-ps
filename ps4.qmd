@@ -55,8 +55,9 @@ Zipcode: ZIP_CD
   print(f"There are {short_term_len_16} hospitals reported in the 2016 data.")
 ```
 
-    a. There are 7,245 hospitals reported in the 2016 data.
-    b.
+a. There are 7,245 hospitals reported in the 2016 data.
+b.
+
 3. 
 ```{python}
   # Subsetting 2017 - 2019 data
@@ -113,8 +114,8 @@ short_term_over_yrs
   unique_hospitals_chart
 ```
 
-    a.
-    b.
+a.
+b.
 
 ## Identify hospital closures in POS file (15 pts) (*)
 
