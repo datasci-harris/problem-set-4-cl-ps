@@ -34,7 +34,8 @@ include-before-body:
 
   base_path = r"/Users/charismalambert/Downloads"
   
-  health_data_16 = os.path.join(base_path, "pos2016.csv")
+  health_path = os.path.join(base_path, "pos2016.csv")
+  health_data_16 = pd.read_csv(health_path)
   print(health_data_16)
 ```
 
@@ -47,9 +48,10 @@ Zipcode: ZIP_CD
 
 2. 
 ```{python}
-  short_term = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == "01") & (health_data_16["PRVDR_CTGRY_CD"] == "01")]
+  short_term = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
+  
   print(short_term)
-
+  print(len(short_term))
 ```
 
     a.
