@@ -34,8 +34,8 @@ include-before-body:
 
   base_path = r"/Users/charismalambert/Downloads"
   
-  health_path = os.path.join(base_path, "pos2016.csv")
-  health_data_16 = pd.read_csv(health_path)
+  health_path_16 = os.path.join(base_path, "pos2016.csv")
+  health_data_16 = pd.read_csv(health_path_16)
   print("This is 2016 data:" , health_data_16)
 ```
 
@@ -58,6 +58,14 @@ Zipcode: ZIP_CD
     b.
 3. 
 ```{python}
+  health_path_17 = os.path.join(base_path, "pos2017.csv")
+  health_data_17 = pd.read_csv(health_path_17)
+
+  health_path_18 = os.path.join(base_path, "pos2017.csv")
+  health_data_18 = pd.read_csv(health_path_18)
+
+  health_path_19 = os.path.join(base_path, "pos2019.csv")
+  health_data_19 = pd.read_csv(health_path)
 
 ```
 
