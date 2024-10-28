@@ -36,7 +36,7 @@ include-before-body:
   
   health_path_16 = os.path.join(base_path, "pos2016.csv")
   health_data_16 = pd.read_csv(health_path_16)
-  print("This is 2016 data:" , health_data_16)
+  health_data_16
 ```
 
 I pulled the following variables:  
@@ -49,7 +49,10 @@ Zipcode: ZIP_CD
 2. 
 ```{python}
   short_term_16 = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
+  short_term_16["year"] = 2016
+
   short_term_len_16 = len(short_term_16)
+  print(f"There are {short_term_len_16} hospitals reported in the 2016 data.")
 ```
 
     a. There are 7,245 hospitals reported in the 2016 data.
@@ -60,15 +63,18 @@ Zipcode: ZIP_CD
   health_path_17 = os.path.join(base_path, "pos2017.csv")
   health_data_17 = pd.read_csv(health_path_17)
   short_term_17 =  health_data_17[(health_data_17["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_17["PRVDR_CTGRY_CD"] == 1)]
+  short_term_17["year"] = 2017
 
 
   health_path_18 = os.path.join(base_path, "pos2017.csv")
   health_data_18 = pd.read_csv(health_path_18)
   short_term_18 = health_data_18[(health_data_18["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_18["PRVDR_CTGRY_CD"] == 1)]
+  short_term_18["year"] = 2018
 
   health_path_19 = os.path.join(base_path, "pos2019.csv")
   health_data_19 = pd.read_csv(health_path)
   short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
+  short_term_19["year"] = 2019
 
   short_term_len_17 = len(short_term_17)
   short_term_len_18 = len(short_term_18)
@@ -94,9 +100,20 @@ There are 7,260 hospitals reported in the 2017 data. There are 7,260 hospitals r
 
 ```{python}
 short_term_over_yrs = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index= True)
+short_term_over_yrs
 ```
 
 4. 
+```{python}
+  unique_hospitals_yr = short_term_over_yrs.groupby("year")["PRVDR_NUM"].nunique().reset_index()
+  unique_hospitals_yr.columns = ["year", "unique_hospitals"]
+
+  unique_hospitals_chart = alt.Chart(unique_hospitals_yr).mark_bar().encode(
+    x = alt.X("year:O", title = "Year"),
+    y = alt.Y("unique_hospitals:Q", title = "Number of Unique Hopsitals")).properties(title = "Number of Unique Hospitals Over the Years")
+  unique_hospitals_chart
+```
+
     a.
     b.
 
