@@ -36,7 +36,7 @@ include-before-body:
   
   health_path = os.path.join(base_path, "pos2016.csv")
   health_data_16 = pd.read_csv(health_path)
-  print(health_data_16)
+  print("This is 2016 data:" , health_data_16)
 ```
 
 I pulled the following variables:  
@@ -49,14 +49,18 @@ Zipcode: ZIP_CD
 2. 
 ```{python}
   short_term = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
-  
-  print(short_term)
-  print(len(short_term))
+
+  print("This is short_term data:", short_term)
+  print("This is the length:", len(short_term))
 ```
 
-    a.
+    a. There are 7,245 hospitals reported in this data.
     b.
 3. 
+```{python}
+
+```
+
 4. 
     a.
     b.
