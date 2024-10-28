@@ -47,7 +47,7 @@ Zipcode: ZIP_CD
 
 2. 
 ```{python}
-  short_term = health_data_16[(health_data_16["PRVDR_CTGRY_CD" == "01"]) & (health_data_16["PRVDR_CTGRY_SBTYP_CD"] == "01")]
+  short_term = health_data_16[(health_data_16["PRVDR_CTGRY_CD"] == "01") & (health_data_16["PRVDR_CTGRY_SBTYP_CD"] == "01")]
   print(short_term)
 
 ```
