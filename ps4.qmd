@@ -39,13 +39,19 @@ include-before-body:
 ```
 
 I pulled the following variables:  
-Provider code: PRVDR_CTGRY_CD
+Provider code: PRVDR_CTGRY_CD and PRVDR_CTGRY_SBTYP_CD
 CMS certification number: PRVDR_NUM
 Termination code: PGM_TRMNTN_CD
 Facility Name: FAC_NAME
 Zipcode: ZIP_CD
 
 2. 
+```{python}
+  short_term = health_data_16[(health_data_16["PRVDR_CTGRY_CD" == "01"]) & (health_data_16["PRVDR_CTGRY_SBTYP_CD"] == "01")]
+  print(short_term)
+
+```
+
     a.
     b.
 3. 
