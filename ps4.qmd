@@ -49,8 +49,7 @@ Zipcode: ZIP_CD
 2. 
 ```{python}
   short_term_16 = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
-
-  print("This is the length:", len(short_term))
+  short_term_len_16 = len(short_term_16)
 ```
 
     a. There are 7,245 hospitals reported in the 2016 data.
@@ -70,9 +69,22 @@ Zipcode: ZIP_CD
   health_data_19 = pd.read_csv(health_path)
   short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
 
-  print("This is the 2017 length:", len(short_term_17))
-  print("This is the 2018 length:", len(short_term_18))
-  print("This is the 2019 length:", len(short_term_19))
+  short_term_len_17 = len(short_term_17)
+  short_term_len_18 = len(short_term_18)
+  short_term_len_19 = len(short_term_19)
+
+  observations_by_year = pd.DataFrame({
+  "year": [2016, 2017, 2018, 2019], 
+  "observations": [short_term_len_16, short_term_len_17, short_term_len_18, short_term_len_19]})
+
+  import altair as alt
+  obs_by_year = alt.Chart(observations_by_year).mark_bar().encode(
+    x = alt.X("year:O", title = "Year"),
+    y = alt.Y("observations:Q", title = "Number of Hospitals", scale = alt.Scale(domain = [6000, 7400], clamp = True), axis = alt.Axis(tickMinStep = 100))
+    ).properties(
+    title = "Number of Short-Term Hospitals by Year") 
+
+  obs_by_year
 ```
 
 There are 7,260 hospitals reported in the 2017 data. There are 7,260 hospitals reported in the 2018 data. There are 7,245 hospitals reported in the 2019 data.
