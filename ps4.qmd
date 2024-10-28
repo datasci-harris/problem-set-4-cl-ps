@@ -35,8 +35,16 @@ include-before-body:
   base_path = r"/Users/charismalambert/Downloads"
   
   health_data_16 = os.path.join(base_path, "pos2016.csv")
-
+  print(health_data_16)
 ```
+
+I pulled the following variables:  
+Provider code: PRVDR_CTGRY_CD
+CMS certification number: PRVDR_NUM
+Termination code: PGM_TRMNTN_CD
+Facility Name: FAC_NAME
+Zipcode: ZIP_CD
+
 2. 
     a.
     b.
