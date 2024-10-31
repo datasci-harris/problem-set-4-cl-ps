@@ -24,7 +24,7 @@ include-before-body:
 
 ## Submission Steps (10 pts)
 
-## Download and explore the Provider of Services (POS) file (10 pts)
+## Download and explore the Provider of Services (POS) file (10 pts) Partner 1
 
 1. 
 ```{python}
@@ -116,7 +116,7 @@ short_term_over_yrs
 a.
 b.
 
-## Identify hospital closures in POS file (15 pts) (*)
+## Identify hospital closures in POS file (15 pts) (*) Partner 2
 
 1. 
 2. 
@@ -125,7 +125,7 @@ b.
     b.
     c.
 
-## Download Census zip code shapefile (10 pt) 
+## Download Census zip code shapefile (10 pt)  Partner 1
 
 1. 
 ```{python}
@@ -165,7 +165,7 @@ hospitals_by_zipTX["area_km2"] = hospitals_by_zipTX["area"]/1000000
 hospitals_by_zipTX.plot(column = "area_km2", legend = True).set_axis_off()
 ```
 
-## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
+## Calculate zip code’s distance to the nearest hospital (20 pts) (*) Partner 2
 
 1. 
 2. 
@@ -179,7 +179,7 @@ hospitals_by_zipTX.plot(column = "area_km2", legend = True).set_axis_off()
     b.
     c.
     
-## Effects of closures on access in Texas (15 pts)
+## Effects of closures on access in Texas (15 pts) Partner 1
 
 1. 
 2. 
