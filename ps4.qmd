@@ -131,7 +131,7 @@ b.
 ```{python}
 import geopandas as gdp
 
-filepath = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k.zip"
+zip_filepath = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k.zip"
 
 ```
 
@@ -161,7 +161,8 @@ hospitals_by_zipTX = texas_zip.merge(hospitals_by_zip, left_on = "ZCTA5", right_
 hospitals_by_zipTX = hospitals_by_zipTX.to_crs("EPSG:26914")
 hospitals_by_zipTX["area"] = hospitals_by_zipTX["geometry"].area
 
-hospitals_by_zipTX.plot(column = "area", legend = True).set_axis_off()
+hospitals_by_zipTX["area_km2"] = hospitals_by_zipTX["area"]/1000000
+hospitals_by_zipTX.plot(column = "area_km2", legend = True).set_axis_off()
 ```
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
