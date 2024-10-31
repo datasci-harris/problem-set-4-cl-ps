@@ -128,6 +128,14 @@ b.
 ## Download Census zip code shapefile (10 pt) 
 
 1. 
+```{python}
+import geopandas as gdp
+
+filepath = "/Users/charismalambert/Downloads"
+folder = gdp.read_file(filepath, "gz_2010_us_860_00_500k")
+print(folder.info())
+```
+
     a. The five file types are .xml, .shx, .shp, .prj, .dbf. 
     b. The file sizes are as follows: 
     .xml = 16KB
@@ -148,11 +156,13 @@ texas_zip = census_shp[census_shp["ZCTA5"].str.startswith("75")]
 short_term_16["ZIP_CD"] = short_term_16["ZIP_CD"].astype(str)
 hospitals_by_zip = short_term_16["ZIP_CD"].value_counts().reset_index()
 hospitals_by_zip.columns = ["zip_code", "total_hospitals"]
-print(hospitals_by_zip)
-hospitals_by_zipTX = hospitals_by_zip[hospitals_by_zip["zip_code"].str.startswith("75")]
+hospitals_by_zipTX = texas_zip.merge(hospitals_by_zip, left_on = "ZCTA5", right_on = "zip_code", how = "left")
 
+#citation: Class notes calculate area and do conversions based on unit. File was too large to open on my computer so I used ChatGPT to ask how to convert units and calculate area. The recommendation was to run .crs and I got back 4269. From there ChatGPT recommedned to convert to crs with "EPSG:26914" for area that would be in square meters.
+hospitals_by_zipTX = hospitals_by_zipTX.to_crs("EPSG:26914")
+hospitals_by_zipTX["area"] = hospitals_by_zipTX["geometry"].area
 
-
+hospitals_by_zipTX.plot(column = "area", legend = True).set_axis_off()
 ```
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
