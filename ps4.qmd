@@ -126,17 +126,34 @@ b.
     c.
 
 ## Download Census zip code shapefile (10 pt) 
+
+1. 
+    a. The five file types are .xml, .shx, .shp, .prj, .dbf. 
+    b. The file sizes are as follows: 
+    .xml = 16KB
+    .shx = 837.5 MB
+    .shp = 837.5 MB
+    .prj = 165 bytes
+    .dbf 6.4 MB
+2. 
 ```{python}
 import geopandas as gdp
 
 filepath = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k"
 census_shp = gdp.read_file(filepath)
 
+census_shp["ZCTA5"] = census_shp["ZCTA5"].astype(str)
+texas_zip = census_shp[census_shp["ZCTA5"].str.startswith("75")]
+
+short_term_16["ZIP_CD"] = short_term_16["ZIP_CD"].astype(str)
+hospitals_by_zip = short_term_16["ZIP_CD"].value_counts().reset_index()
+hospitals_by_zip.columns = ["zip_code", "total_hospitals"]
+print(hospitals_by_zip)
+hospitals_by_zipTX = hospitals_by_zip[hospitals_by_zip["zip_code"].str.startswith("75")]
+
+
+
 ```
-1. 
-    a. The five file types are .xml, .shx, .shp, .prj, .dbf. 
-    b. 
-2. 
 
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*)
 
