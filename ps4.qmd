@@ -60,29 +60,28 @@ b.
 
 3. 
 ```{python}
-  # Subsetting 2017 - 2019 data
   health_path_17 = os.path.join(base_path, "pos2017.csv")
   health_data_17 = pd.read_csv(health_path_17)
   short_term_17 =  health_data_17[(health_data_17["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_17["PRVDR_CTGRY_CD"] == 1)]
   short_term_17["year"] = 2017
 
-
-  health_path_18 = os.path.join(base_path, "pos2017.csv")
-  health_data_18 = pd.read_csv(health_path_18)
+  health_path_18 = os.path.join(base_path, "pos2018.csv")
+  health_data_18 = pd.read_csv(health_path_18, encoding='latin1')
   short_term_18 = health_data_18[(health_data_18["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_18["PRVDR_CTGRY_CD"] == 1)]
   short_term_18["year"] = 2018
 
   health_path_19 = os.path.join(base_path, "pos2019.csv")
-  health_data_19 = pd.read_csv(health_path)
+  health_data_19 = pd.read_csv(health_path, encoding='latin1')
   short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
   short_term_19["year"] = 2019
 
   short_term_len_17 = len(short_term_17)
   short_term_len_18 = len(short_term_18)
   short_term_len_19 = len(short_term_19)
+  print(short_term_len_18)
 ```
 
-There are 7,260 hospitals reported in the 2017 data. There are 7,260 hospitals reported in the 2018 data. There are 7,245 hospitals reported in the 2019 data.
+There are 7,260 hospitals reported in the 2017 data. There are 7,277 hospitals reported in the 2018 data. There are 7,245 hospitals reported in the 2019 data.
 
 ```{python}
 short_term_over_yrs = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index= True)
@@ -127,9 +126,15 @@ b.
     c.
 
 ## Download Census zip code shapefile (10 pt) 
+```{python}
+import geopandas as gdp
 
+filepath = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k"
+census_shp = gdp.read_file(filepath)
+
+```
 1. 
-    a.
+    a. The five file types are .xml, .shx, .shp, .prj, .dbf. 
     b. 
 2. 
 
