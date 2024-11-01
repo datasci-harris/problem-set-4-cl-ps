@@ -159,7 +159,6 @@ hospitals_by_zip.columns = ["zip_code", "total_hospitals"]
 hospitals_by_zipTX = texas_zip.merge(hospitals_by_zip, left_on = "ZCTA5", right_on = "zip_code", how = "left")
 
 #citation: Class notes calculate area and do conversions based on unit. File was too large to open on my computer so I used ChatGPT to ask how to convert units and calculate area. The recommendation was to run .crs and I got back 4269. From there ChatGPT recommedned to convert to crs with "EPSG:26914" for area that would be in square meters.
-hospitals_by_zipTX = hospitals_by_zipTX.to_crs("EPSG:26914")
 hospitals_by_zipTX["area"] = hospitals_by_zipTX["geometry"].area
 
 hospitals_by_zipTX["area_km2"] = hospitals_by_zipTX["area"]/1000000
