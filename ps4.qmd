@@ -132,7 +132,8 @@ b.
 import geopandas as gdp
 
 zip_filepath = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k.zip"
-
+zip_file = gdp.read_file(zip_filepath)
+print(zip_file.info())
 ```
 
     a. The five file types are .xml, .shx, .shp, .prj, .dbf. 
