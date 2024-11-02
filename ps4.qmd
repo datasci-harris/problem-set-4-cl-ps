@@ -98,12 +98,13 @@ b. I found a report from the American Hospital Association that there were 5,534
 
 ```{python}
 # Append the hospital data from 2016 - 2019 together
-short_term_over_yrs = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index= True)
+combined_df_final = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index= True)
+combined_df_final
 ```
 
 ```{python}
   # Plot the number of observations by year
-  observations_by_year = short_term_over_yrs.groupby("year").size().reset_index(name = "observations")
+  observations_by_year = combined_df_final.groupby("year").size().reset_index(name = "observations")
 
   import altair as alt
   obs_by_year = alt.Chart(observations_by_year).mark_bar().encode(
@@ -119,7 +120,7 @@ short_term_over_yrs = pd.concat([short_term_16, short_term_17, short_term_18, sh
 4. a.
 ```{python}
   # Plot the number of unique hospitals 
-  unique_hospitals_yr = short_term_over_yrs.groupby("year")["PRVDR_NUM"].nunique().reset_index()
+  unique_hospitals_yr = combined_df_final.groupby("year")["PRVDR_NUM"].nunique().reset_index()
   unique_hospitals_yr.columns = ["year", "unique_hospitals"]
 
   unique_hospitals_chart = alt.Chart(unique_hospitals_yr).mark_bar().encode(
@@ -133,8 +134,6 @@ b. Comparing the two graphs, I am seeing that the data is pretty consistent over
 ## Identify hospital closures in POS file (15 pts) (*) Partner 2
 
 1. 
-
-
 2. 
 3. 
     a.
@@ -185,6 +184,94 @@ hospitals_by_zipTX.plot(column = "area_km2", legend = True).set_axis_off()
 ## Calculate zip code’s distance to the nearest hospital (20 pts) (*) Partner 2
 
 1. 
+```{python}
+from shapely.geometry import Point, Polygon
+from shapely.ops import nearest_points
+import time
+
+zips_all_centroids = census_shp
+
+# Filter Texas Border States zip codes 
+zips_texas_borderstates_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0870") | (zips_all_centroids['GEO_ID'] == "8600000US0871") | (zips_all_centroids['GEO_ID'] >= "8600000US0873") & (zips_all_centroids['GEO_ID'] <= "8600000US0875") | (zips_all_centroids['GEO_ID'] >= "8600000US0877") & (zips_all_centroids['GEO_ID'] <= "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0730") | (zips_all_centroids['GEO_ID'] == "8600000US0731") | (zips_all_centroids['GEO_ID'] >= "8600000US0734") & (zips_all_centroids['GEO_ID'] <= "8600000US0741") | (zips_all_centroids['GEO_ID'] >= "8600000US0743") & (zips_all_centroids['GEO_ID'] <= "8600000US0749") | (zips_all_centroids['GEO_ID'] >= "8600000US0716") & (zips_all_centroids['GEO_ID'] <= "8600000US0729") | (zips_all_centroids['GEO_ID'] >= "8600000US0700") & (zips_all_centroids['GEO_ID'] <= "8600000US0701") | (zips_all_centroids['GEO_ID'] >= "8600000US0703") & (zips_all_centroids['GEO_ID'] <= "8600000US0708") | (zips_all_centroids['GEO_ID'] >= "8600000US0710") & (zips_all_centroids['GEO_ID'] <= "8600000US0714") ] 
+
+# Filter Texas zip codes 
+zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
+
+# Adding leading 0's to combined_df_final['ZIP_CD']
+combined_df_final['ZIP_CD'] = combined_df_final['ZIP_CD'].str.zfill(6)
+
+# Dropping last digit from combined_df_final['ZIP_CD']
+combined_df_final['ZIP_CD'] = combined_df_final['ZIP_CD'].str[:-1]
+
+# Creating dataframe that has only the zip codes in Texas and Bordering hospitals that each have at least one hospital
+zips_tb_with_hosp = combined_df_final[
+    combined_df_final['ZIP_CD'].isin(zips_texas_borderstates_centroids['ZCTA5']) & 
+    (combined_df_final["year"] == 2016)]
+
+zips_tb_with_hosp = zips_tb_with_hosp.groupby('ZIP_CD').agg(number_of_hospitals =('PRVDR_NUM', 'count')).reset_index()
+zips_tb_with_hosp = zips_tb_with_hosp[zips_tb_with_hosp['number_of_hospitals'] >= 1]
+zips_tb_with_hosp
+zips_tb_with_hosp_cent = zips_texas_borderstates_centroids[zips_texas_borderstates_centroids['ZCTA5'].isin(zips_tb_with_hosp['ZIP_CD'])]
+
+# Creating ZCTA5 in combined_df_final, which has all hospital data
+combined_df_final['ZCTA5'] = combined_df_final['ZIP_CD']
+combined_df_final_1 = combined_df_final
+
+## Used an inner merge on ZCTA5
+zips_withhospital_centroids = pd.merge(combined_df_final_1, zips_tb_with_hosp_cent, how='inner', on='ZCTA5')
+zips_withhospital_centroids
+
+# Making sure all are geodataframes
+if not isinstance(zips_withhospital_centroids, gpd.GeoDataFrame):
+    zips_withhospital_centroids = gpd.GeoDataFrame(zips_withhospital_centroids, geometry='geometry')
+
+if 'geometry' not in zips_withhospital_centroids.columns:
+    zips_withhospital_centroids['geometry'] = zips_withhospital_centroids.apply(
+        lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Ensure they use the same CRS
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=4326)
+zips_withhospital_centroids = gpd.GeoDataFrame(zips_withhospital_centroids, geometry='geometry')
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=4326)
+
+# Subset to 10 ZIP codes for testing
+subset = zips_texas_centroids.head(10)
+subset
+
+# Calculating time for the join with the subset
+def calculate_nearest(row, other_gdf, geom_col='geometry', src_col='ZCTA5'):
+    if other_gdf.empty or row[geom_col] is None:
+        return None, float('inf')
+    other_geom_union = other_gdf.geometry.unary_union
+    nearest_geom = nearest_points(row[geom_col], other_geom_union)[1]
+    nearest_point = other_gdf.loc[other_gdf.geometry == nearest_geom]
+    if nearest_point.empty:
+        return None, float('inf')
+    nearest_zip = nearest_point[src_col].values[0]
+    distance = row[geom_col].distance(nearest_geom)
+    return nearest_zip, distance
+
+start_time = time.time()
+
+subset['nearest_zip'], subset['distance_to_nearest'] = zip(
+    *subset.apply(calculate_nearest, other_gdf=zips_withhospital_centroids, axis=1)
+)
+
+end_time = time.time()
+time_taken = end_time - start_time
+
+print(subset[['ZCTA5', 'nearest_zip', 'distance_to_nearest']])
+print(f"Time taken for subset of 10 ZIP codes: {time_taken} seconds")
+
+total_zip_codes = len(zips_texas_centroids)
+estimated_time = (time_taken / 10) * total_zip_codes
+print(f"Estimated time for the entire dataset: {estimated_time} seconds")
+
+# Used BingChat with the following query: "how do I create a function that calculates the calculate the distance to the nearest zip code with at least one hospital?"
+# Used BingChat with the following query: "how do I measure the time for a spatial join?"
+
+```
+
 2. 
 3. 
 4. 
