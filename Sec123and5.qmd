@@ -1,0 +1,339 @@
+---
+title: "Untitled"
+format: html
+---
+
+# Section 1: Download and explore the Provider of Services (POS) file (10 pts) Partner 1
+
+1. 
+```{python}
+  import pandas as pd
+  import os
+  import csv
+  import warnings
+  warnings.filterwarnings("ignore")
+
+  base_path = r"/Users/charismalambert/Downloads"
+  
+  health_path_16 = os.path.join(base_path, "pos2016.csv")
+  health_data_16 = pd.read_csv(health_path_16)
+```
+
+I pulled the following variables:  
+Provider code: PRVDR_CTGRY_CD and PRVDR_CTGRY_SBTYP_CD
+CMS certification number: PRVDR_NUM
+Termination code: PGM_TRMNTN_CD
+Facility Name: FAC_NAME
+Zipcode: ZIP_CD
+
+2. 
+```{python}
+  short_term_16 = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
+  short_term_16["year"] = 2016
+
+  short_term_len_16 = len(short_term_16)
+  print(f"There are {short_term_len_16} hospitals reported in the 2016 data.")
+```
+
+a. There are 7,245 hospitals reported in the 2016 data.
+b. I found a report from the American Hospital Association that there were 5,534 hospitals registered in the US in 2016. I think it differs because their data does not contain outliers or fuzz, such as a if a hospital closed at any point in 2016 they likely removed it from their dataset, whereas our dataset might have it for the full year. 
+
+3. 
+```{python}
+  # Repeat 3 steps for 2017- 2019: 1) load data, 2) filter for short-term, and 3) find number of hospitals for that year.
+  health_path_17 = os.path.join(base_path, "pos2017.csv")
+  health_data_17 = pd.read_csv(health_path_17)
+  short_term_17 =  health_data_17[(health_data_17["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_17["PRVDR_CTGRY_CD"] == 1)]
+  short_term_17["year"] = 2017
+
+  health_path_18 = os.path.join(base_path, "pos2018.csv")
+  health_data_18 = pd.read_csv(health_path_18, encoding='latin1')
+  short_term_18 = health_data_18[(health_data_18["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_18["PRVDR_CTGRY_CD"] == 1)]
+  short_term_18["year"] = 2018
+
+  health_path_19 = os.path.join(base_path, "pos2019.csv")
+  health_data_19 = pd.read_csv(health_path_19, encoding='latin1')
+  short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
+  short_term_19["year"] = 2019
+
+  short_term_len_17 = len(short_term_17)
+  short_term_len_18 = len(short_term_18)
+  short_term_len_19 = len(short_term_19)
+```
+
+```{python}
+# Append the hospital data from 2016 - 2019 together
+combined_df_final = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index= True)
+combined_df_final
+```
+
+```{python}
+  # Plot the number of observations by year
+  observations_by_year = combined_df_final.groupby("year").size().reset_index(name = "observations")
+
+  import altair as alt
+  obs_by_year = alt.Chart(observations_by_year).mark_bar().encode(
+    x = alt.X("year:O", title = "Year"),
+    y = alt.Y("observations:Q", title = "Number of Hospitals", scale = alt.Scale(domain = [6000, 7400], clamp = True), axis = alt.Axis(tickMinStep = 100))
+    ).properties(
+    title = "Number of Short-Term Hospitals by Year") 
+
+  obs_by_year
+```
+
+
+4. a.
+```{python}
+  # Plot the number of unique hospitals 
+  unique_hospitals_yr = combined_df_final.groupby("year")["PRVDR_NUM"].nunique().reset_index()
+  unique_hospitals_yr.columns = ["year", "unique_hospitals"]
+
+  unique_hospitals_chart = alt.Chart(unique_hospitals_yr).mark_bar().encode(
+    x = alt.X("year:O", title = "Year"),
+    y = alt.Y("unique_hospitals:Q", title = "Number of Unique Hopsitals")).properties(title = "Number of Unique Hospitals Over the Years")
+  unique_hospitals_chart
+```
+
+b. Comparing the two graphs, I am seeing that the data is pretty consistent over the years-- that there is an increase over the years. There is long-term stability of hospitals, with a slight increase from year to year, so there are more unique hospitals (new or mergers) but less hospitals than the year total.
+
+# Section 2: Identify hospital closures in POS file (15 pts) (*) Partner 2
+
+## Q1 
+```{python}
+combined_df_final['ZIP_CD'] = combined_df_final['ZIP_CD'].astype(str)
+
+# Creating dataframe for active hospitals in 2016
+certified_2016 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2016)]
+
+# Creating dataframe for active hospitals in 2017
+certified_2017 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2017)]
+
+# Creating dataframe for active hospitals in 2018
+certified_2018 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2018)]
+
+# Creating dataframe for active hospitals in 2019
+certified_2019 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2019)]
+
+# Finding out which hospitals were closed by 2019 that were active in 2016, by PRVDR_NUM
+hospitals_closed = pd.merge(certified_2016, certified_2019, on='PRVDR_NUM', how='left', indicator=True)
+hospitals_closed = hospitals_closed[hospitals_closed['_merge'] == 'left_only'].drop(columns=['_merge'])
+
+# Filtering combined_df_final for entries of hospitals in hospitals_closed (by PGM_TRMNTN_CD), when status became not active, and the year this change happened
+filtered_hospitals_closed = combined_df_final[(combined_df_final['PGM_TRMNTN_CD'] != 00) & 
+                            (combined_df_final['PRVDR_NUM'].isin(hospitals_closed['PRVDR_NUM']))]
+
+# Grouping filtered_hospitals_closed by name of hospital and summarizing year of termination/disappearance
+last_active_years = (filtered_hospitals_closed.groupby('FAC_NAME')
+                     .agg(year_terminated_disappear =('year', 'min'), 
+                          zip=('ZIP_CD', lambda x: x.unique()[0]))
+                     .reset_index())
+
+# Print how many hospitals fit the description:
+print("The number of hospitals active in 2016 that are suspected to have closed by 2019 is", len(last_active_years["FAC_NAME"].unique()))
+```
+
+## Q2
+```{python}
+# Sorting by hospital name and printing first 10 hospitals
+last_active_years.sort_values(by='FAC_NAME', ascending=True)
+last_active_years_1 = last_active_years[["FAC_NAME", "year_terminated_disappear"]]
+first_10 = last_active_years.head(10)
+print(first_10)
+```
+
+## Q3a
+```{python}
+# Grouping by ZIP_CD and year, and summarizing number of active hospitals by filtering for ['PGM_TRMNTN_CD'] == 00
+active_hospitals_per_year = (combined_df_final[combined_df_final['PGM_TRMNTN_CD'] == 00]
+                             .groupby(['ZIP_CD', 'year']).size().reset_index(name='active_count')).reset_index()
+
+active_hospitals_per_year = active_hospitals_per_year[active_hospitals_per_year["ZIP_CD"].isin(hospitals_closed['ZIP_CD_x'])]
+
+# Created pivot table with columns for ZIP_CD, 2016, 2017, 2018, 2019, each summarizing number of active hospitals
+pivoted_df = active_hospitals_per_year.pivot(index='ZIP_CD', columns='year', values='active_count').reset_index()
+
+# To view entire dataframes
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
+# Filling 0 for NAs
+pivoted_df = pivoted_df.fillna(0)
+
+# Dataframe shows zipcodes that saw either an increase or steady number
+increased_hospitals = pivoted_df[(pivoted_df[2017] >= pivoted_df[2016]) | 
+                                 (pivoted_df[2018] >= pivoted_df[2017]) |
+                                 (pivoted_df[2019] >= pivoted_df[2018])]
+
+# List of unique ZIP_CD in above dataframe
+no_decrease_zips = increased_hospitals['ZIP_CD'].unique()
+
+# Merges no_decrease_zips with last_active_years to filter out (exclude) zipcodes that saw increase or no change during year of termination/disappearance/closure (final df is filtered_decreases_zips_df)
+merged_df = last_active_years.merge(pivoted_df, how='left', left_on='zip', right_on='ZIP_CD')
+filtered_decreases_zips_df = merged_df[~((merged_df['year_terminated_disappear'] == 2016) & (merged_df[2017] >= merged_df[2016]) |
+                          (merged_df['year_terminated_disappear'] == 2017) & (merged_df[2018] >= merged_df[2017]) |
+                          (merged_df['year_terminated_disappear'] == 2018) & (merged_df[2019] >= merged_df[2018]))]
+
+# Filtering master dataframe (combined_df_final) for only those hospitals that are in filtered_decreases_zips_df
+merg_aq = combined_df_final[(combined_df_final['FAC_NAME'].isin(filtered_decreases_zips_df['FAC_NAME']))]
+
+# Dataframe with total number of hospitals in the corrected list of hospitals 
+provider_count = merg_aq.groupby('FAC_NAME') \
+                        .agg(NUM_CMS=('PRVDR_NUM', 'count')) \
+                        .reset_index()
+
+# Dataframe with total number of hospitals that could be mergers of acquisitions
+provider_count_1 = provider_count[(provider_count['NUM_CMS'] > 1)]
+
+print("The number of hospitals that went through mergers or aquisitions is (Answer to 3a)", len(provider_count_1))
+
+# Used BingChat with the following query "how do I create a pivot table that has a column for ZIP_CD and each year?"
+# Used BingChat with the following query "how do I check that the increase/no change in active hospitals coincides with year of termination in that zipcode"
+```
+
+## Q3b
+```{python}
+# Grouping by ZIP_CD and year, and summarizing number of active hospitals by filtering for ['PGM_TRMNTN_CD'] == 00
+active_hospitals_per_year = (combined_df_final[combined_df_final['PGM_TRMNTN_CD'] == 00]
+                             .groupby(['ZIP_CD', 'year']).size().reset_index(name='active_count')).reset_index()
+
+active_hospitals_per_year = active_hospitals_per_year[active_hospitals_per_year["ZIP_CD"].isin(hospitals_closed['ZIP_CD_x'])]
+
+# Created pivot table with columns for ZIP_CD, 2016, 2017, 2018, 2019, each summarizing number of active hospitals
+pivoted_df = active_hospitals_per_year.pivot(index='ZIP_CD', columns='year', values='active_count').reset_index()
+
+# To view entire dataframes
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
+# Filling 0 for NAs
+pivoted_df = pivoted_df.fillna(0)
+
+# Dataframe shows zipcodes that saw either an increase or steady number
+increased_hospitals = pivoted_df[(pivoted_df[2017] >= pivoted_df[2016]) | 
+                                 (pivoted_df[2018] >= pivoted_df[2017]) |
+                                 (pivoted_df[2019] >= pivoted_df[2018])]
+
+# List of unique ZIP_CD in above dataframe
+no_decrease_zips = increased_hospitals['ZIP_CD'].unique()
+
+# Merges no_decrease_zips with last_active_years to filter out (exclude) zipcodes that saw increase or no change during year of termination/disappearance/closure (final df is filtered_decreases_zips_df)
+merged_df = last_active_years.merge(pivoted_df, how='left', left_on='zip', right_on='ZIP_CD')
+filtered_decreases_zips_df = merged_df[~((merged_df['year_terminated_disappear'] == 2016) & (merged_df[2017] >= merged_df[2016]) |
+                          (merged_df['year_terminated_disappear'] == 2017) & (merged_df[2018] >= merged_df[2017]) |
+                          (merged_df['year_terminated_disappear'] == 2018) & (merged_df[2019] >= merged_df[2018]))]
+
+# Filtering master dataframe (combined_df_final) for only those hospitals that are in filtered_decreases_zips_df
+merg_aq = combined_df_final[(combined_df_final['FAC_NAME'].isin(filtered_decreases_zips_df['FAC_NAME']))]
+
+# Dataframe with total number of hospitals in the corrected list of hospitals 
+provider_count = merg_aq.groupby('FAC_NAME') \
+                        .agg(NUM_CMS=('PRVDR_NUM', 'count')) \
+                        .reset_index()
+
+# Dataframe with total number of hospitals that could be mergers of acquisitions
+provider_count_1 = provider_count[(provider_count['NUM_CMS'] > 1)]
+
+### b
+print("The number of hospitals in the corrected list is (Answer to 3b)", len(provider_count))
+```
+
+## Q3c
+```{python}
+### c
+provider_count.sort_values(by='FAC_NAME', ascending=True)
+print("The answer to 3c is:")
+print(provider_count.head(10))
+
+# Used BingChat with the following query "how do I create a pivot table that has a column for ZIP_CD and each year?"
+# Used BingChat with the following query "how do I check that the increase/no change in active hospitals coincides with year of termination in that zipcode"
+```
+
+## Section 5: Effects of closures on access in Texas (15 pts) Partner 1
+1. 
+```{python}
+closures_by_zip = merg_aq.groupby("ZIP_CD").agg(NUM_CMS = ("PRVDR_NUM", "count")).reset_index()
+texas_closures_by_zip = closures_by_zip[closures_by_zip["ZIP_CD"].str.startswith(("75", "76", "77", "78", "79"))].reset_index()
+print(texas_closures_by_zip)
+```
+
+2. 
+```{python}
+import geopandas as gdp
+import matplotlib.pyplot as plt
+
+# load .shp file
+zip_gdf = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
+zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
+print("ZIP_GDF:", zip_gdf)
+
+zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
+aggregated_closures = texas_closures_by_zip.groupby('ZIP_CD').agg({'NUM_CMS': 'sum'}).reset_index() # Query Corrected
+
+# Merge the GeoDataFrame with the aggregated closures DataFrame
+zip_and_geo = zip_gdf.merge(aggregated_closures, on="ZIP_CD", how="inner")  # Query Corrected
+
+# Create the choropleth map
+fig, ax = plt.subplots(figsize=(10, 10))
+zip_and_geo.plot(column='NUM_CMS', ax=ax, legend=True, cmap='Blues', edgecolor='black')
+plt.title('Choropleth Map of Closures by ZIP Code')
+
+plt.show()
+#Citation: For Section 5, Q2-4 I was unable to run and edit because my kernel kept crashing. I ran my code throguh ChatGPT and explained in my query the goal of each section and to correct for potiential error messages. The query corrected lines have been commented "query corrected." I have made a post to Ed and sent an email for help / potiential solution to complete Section 5 and submit for grading. 
+```
+
+3. 
+```{python}
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+# Load the Texas zip code shapefile
+all_zips = gpd.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+
+closures_gdf = gpd.GeoDataFrame(
+    texas_closures_by_zip,
+    geometry=gpd.points_from_xy(texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).x), texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).y)),
+    crs='EPSG:4326'
+)  # Query Corrected
+
+# Create a 10-mile buffer around the affected zip codes 
+texas_closures_by_zip['geometry'] = texas_closures_by_zipgeometry.buffer(10 * 1609.34) 
+closures_buffered = texas_closures_by_zip.dissolve().reset_index()  # Query Corrected
+closures_buffered = gpd.GeoDataFrame(closures_buffered)  # Query Corrected
+
+indirectly_affected = gpd.sjoin(all_zips, closures_buffered, how="inner", op="intersects")  # Query Corrected
+num_indirectly_affected_zips = indirectly_affected['ZCTA5'].nunique()
+
+print(f'The number of indirectly affected zip codes in Texas is: {num_indirectly_affected_zips}')
+#Citation: For Section 5, Q2-4 I was unable to run and edit because my kernel kept crashing. I ran my code throguh ChatGPT and explained in my query the goal of each section and to correct for potiential error messages. The query corrected lines have been commented "query corrected." I have made a post to Ed and sent an email for help / potiential solution to complete Section 5 and submit for grading. 
+```
+
+4. 
+```{python}
+texas_zips = all_zips[all_zips["ZCTA5"].str.startswith(("75","76", "77", "78", "79"))]
+texas_zips = texas_zips.rename(columns = {"ZCTA5": "ZIP_CD"})
+
+texas_zips = texas_zips.to_crs(closures_buffered.crs)
+indirectly_affected = gpd.sjoin(texas_zips, closures_buffered, how="left", op="intersects")  # Query Corrected
+
+texas_zips['category'] = 'Not Affected' 
+
+texas_zips.loc[texas_zips['ZIP_CD'].isin(texas_closures_by_zip['ZIP_CD']), 'category'] = 'Directly Affected'
+texas_zips.loc[indirectly_affected['index_right'].notna(), 'category'] = 'Indirectly Affected' # Query Corrected
+
+color_map = {'Directly Affected': 'blue', 'Indirectly Affected': 'red', 'Not Affected': 'green'}
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+texas_zips.plot(column='category', color=texas_zips['category'].map(color_map), legend=True, ax=ax) # Query Corrected
+
+ax.set_title('Texas Zip Codes Affected by Hospital Closures', fontsize=15)
+ax.set_axis_off()
+plt.show()
+
+#Citation: For Section 5, Q2-4 I was unable to run and edit because my kernel kept crashing. I ran my code throguh ChatGPT and explained in my query the goal of each section and to correct for potiential error messages. The query corrected lines have been commented "query corrected." I have made a post to Ed and sent an email for help / potiential solution to complete Section 5 and submit for grading. 
+```
