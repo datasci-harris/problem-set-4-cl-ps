@@ -1,8 +1,9 @@
 ---
-title: "Your Title"
-author: "Charism Lambert (charisml) and Prashanthi Subbiah ()"
+title: "PSet 4"
+author: "Charisma Lambert and Prashanthi Subbiah"
+date: 11-02-2024
 format: 
-  pdf:
+  html:
     keep-tex: true
     include-in-header: 
        text: |
@@ -21,32 +22,32 @@ include-before-body:
 **PS4:** Due Sat Nov 2 at 5:00PM Central. Worth 100 points. 
 1. This problem set is a paired problem set.
 2. Play paper, scissors, rock to determine who goes first. Call that person Partner 1.
-• Partner 1 (name and cnet ID): Charisma Lambert, charisml
+• Partner 1 (name and cnet ID):Charisma Lambert, charisml
 • Partner 2 (name and cnet ID): Prashanthi Subbiah, prashanthis
 3. Partner 1 will accept the ps4 and then share the link it creates with their partner.
 You can only share it with one partner so you will not be able to change it after your
 partner has accepted.
-4. “This submission is our work alone and complies with the 30538 integrity policy.” Add your initials to indicate your agreement: **CL****PS**.
-5. “I have uploaded the names of anyone else other than my partner and I worked with on the problem set here” (Ahona Roy) (1 point)
+4. “This submission is our work alone and complies with the 30538 integrity policy.” Add
+your initials to indicate your agreement: **CL****PS**.
+5. “I have uploaded the names of anyone else other than my partner and I worked with
+on the problem set here” (Ahona Roy) (1 point)
 6. Late coins used this pset: **1** Late coins left after submission: **3**
-7. Knit your ps4.qmd to an PDF file to make ps4.pdf.
-The PDF should not be more than 25 pages. Use head() and re-size figures when
+7. Knit your ps4.qmd to an PDF file to make ps4.pdf,
+• The PDF should not be more than 25 pages. Use head() and re-size figures when
 appropriate.
 8. (Partner 1): push ps4.qmd and ps4.pdf to your github repo.
 9. (Partner 1): submit ps4.pdf via Gradescope. Add your partner on Gradescope.
 10. (Partner 1): tag your submission in Gradescope
 
-## Style Points (10 pts)
-
-## Submission Steps (10 pts)
-
-## Download and explore the Provider of Services (POS) file (10 pts) Partner 1
+# Section 1: Download and explore the Provider of Services (POS) file (10 pts) Partner 1
 
 1. 
 ```{python}
   import pandas as pd
   import os
   import csv
+  import warnings
+  warnings.filterwarnings("ignore")
 
   base_path = r"/Users/charismalambert/Downloads"
   
@@ -87,7 +88,7 @@ b. I found a report from the American Hospital Association that there were 5,534
   short_term_18["year"] = 2018
 
   health_path_19 = os.path.join(base_path, "pos2019.csv")
-  health_data_19 = pd.read_csv(health_path, encoding='latin1')
+  health_data_19 = pd.read_csv(health_path_19, encoding='latin1')
   short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
   short_term_19["year"] = 2019
 
@@ -129,35 +130,210 @@ combined_df_final
   unique_hospitals_chart
 ```
 
-b. Comparing the two graphs, I am seeing that the data is pretty consistent over the years and there is long-term stability of hospitals, with a slight dip in 2019.
+b. Comparing the two graphs, I am seeing that the data is pretty consistent over the years-- that there is an increase over the years. There is long-term stability of hospitals, with a slight increase from year to year, so there are more unique hospitals (new or mergers) but less hospitals than the year total.
 
-## Identify hospital closures in POS file (15 pts) (*) Partner 2
+# Section 2: Identify hospital closures in POS file (15 pts) (*) Partner 2
 
-1. 
-2. 
-3. 
-    a.
-    b.
-    c.
-
-## Download Census zip code shapefile (10 pt)  Partner 1
-
-1. 
+## Q1 
 ```{python}
-import geopandas as gdp
+combined_df_final['ZIP_CD'] = combined_df_final['ZIP_CD'].astype(str)
 
-zip_filepath = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k.zip"
-zip_file = gdp.read_file(zip_filepath)
-print(zip_file.info())
+# Creating dataframe for active hospitals in 2016
+certified_2016 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2016)]
+
+# Creating dataframe for active hospitals in 2017
+certified_2017 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2017)]
+
+# Creating dataframe for active hospitals in 2018
+certified_2018 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2018)]
+
+# Creating dataframe for active hospitals in 2019
+certified_2019 = combined_df_final[(combined_df_final["PGM_TRMNTN_CD"] == 00) & (combined_df_final["year"] == 2019)]
+
+# Finding out which hospitals were closed by 2019 that were active in 2016, by PRVDR_NUM
+hospitals_closed = pd.merge(certified_2016, certified_2019, on='PRVDR_NUM', how='left', indicator=True)
+hospitals_closed = hospitals_closed[hospitals_closed['_merge'] == 'left_only'].drop(columns=['_merge'])
+
+# Filtering combined_df_final for entries of hospitals in hospitals_closed (by PGM_TRMNTN_CD), when status became not active, and the year this change happened
+filtered_hospitals_closed = combined_df_final[(combined_df_final['PGM_TRMNTN_CD'] != 00) & 
+                            (combined_df_final['PRVDR_NUM'].isin(hospitals_closed['PRVDR_NUM']))]
+
+# Grouping filtered_hospitals_closed by name of hospital and summarizing year of termination/disappearance
+last_active_years = (filtered_hospitals_closed.groupby('FAC_NAME')
+                     .agg(year_terminated_disappear =('year', 'min'), 
+                          zip=('ZIP_CD', lambda x: x.unique()[0]))
+                     .reset_index())
+
+# Print how many hospitals fit the description:
+print("The number of hospitals active in 2016 that are suspected to have closed by 2019 is", len(last_active_years["FAC_NAME"].unique()))
 ```
 
-    a. The five file types are .xml, .shx, .shp, .prj, .dbf. 
-    b. The file sizes are as follows: 
-    .xml = 16KB
-    .shx = 837.5 MB
-    .shp = 837.5 MB
-    .prj = 165 bytes
-    .dbf 6.4 MB
+## Q2
+```{python}
+# Sorting by hospital name and printing first 10 hospitals
+last_active_years.sort_values(by='FAC_NAME', ascending=True)
+last_active_years_1 = last_active_years[["FAC_NAME", "year_terminated_disappear"]]
+first_10 = last_active_years.head(10)
+print(first_10)
+```
+
+## Q3a
+```{python}
+# Grouping by ZIP_CD and year, and summarizing number of active hospitals by filtering for ['PGM_TRMNTN_CD'] == 00
+active_hospitals_per_year = (combined_df_final[combined_df_final['PGM_TRMNTN_CD'] == 00]
+                             .groupby(['ZIP_CD', 'year']).size().reset_index(name='active_count')).reset_index()
+
+active_hospitals_per_year = active_hospitals_per_year[active_hospitals_per_year["ZIP_CD"].isin(hospitals_closed['ZIP_CD_x'])]
+
+# Created pivot table with columns for ZIP_CD, 2016, 2017, 2018, 2019, each summarizing number of active hospitals
+pivoted_df = active_hospitals_per_year.pivot(index='ZIP_CD', columns='year', values='active_count').reset_index()
+
+# To view entire dataframes
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
+# Filling 0 for NAs
+pivoted_df = pivoted_df.fillna(0)
+
+# Dataframe shows zipcodes that saw either an increase or steady number
+increased_hospitals = pivoted_df[(pivoted_df[2017] >= pivoted_df[2016]) | 
+                                 (pivoted_df[2018] >= pivoted_df[2017]) |
+                                 (pivoted_df[2019] >= pivoted_df[2018])]
+
+# List of unique ZIP_CD in above dataframe
+no_decrease_zips = increased_hospitals['ZIP_CD'].unique()
+
+# Merges no_decrease_zips with last_active_years to filter out (exclude) zipcodes that saw increase or no change during year of termination/disappearance/closure (final df is filtered_decreases_zips_df)
+merged_df = last_active_years.merge(pivoted_df, how='left', left_on='zip', right_on='ZIP_CD')
+filtered_decreases_zips_df = merged_df[~((merged_df['year_terminated_disappear'] == 2016) & (merged_df[2017] >= merged_df[2016]) |
+                          (merged_df['year_terminated_disappear'] == 2017) & (merged_df[2018] >= merged_df[2017]) |
+                          (merged_df['year_terminated_disappear'] == 2018) & (merged_df[2019] >= merged_df[2018]))]
+
+# Filtering master dataframe (combined_df_final) for only those hospitals that are in filtered_decreases_zips_df
+merg_aq = combined_df_final[(combined_df_final['FAC_NAME'].isin(filtered_decreases_zips_df['FAC_NAME']))]
+
+# Dataframe with total number of hospitals in the corrected list of hospitals 
+provider_count = merg_aq.groupby('FAC_NAME') \
+                        .agg(NUM_CMS=('PRVDR_NUM', 'count')) \
+                        .reset_index()
+
+# Dataframe with total number of hospitals that could be mergers of acquisitions
+provider_count_1 = provider_count[(provider_count['NUM_CMS'] > 1)]
+
+print("The number of hospitals that went through mergers or aquisitions is (Answer to 3a)", len(provider_count_1))
+
+# Used BingChat with the following query "how do I create a pivot table that has a column for ZIP_CD and each year?"
+# Used BingChat with the following query "how do I check that the increase/no change in active hospitals coincides with year of termination in that zipcode"
+```
+
+## Q3b
+```{python}
+# Grouping by ZIP_CD and year, and summarizing number of active hospitals by filtering for ['PGM_TRMNTN_CD'] == 00
+active_hospitals_per_year = (combined_df_final[combined_df_final['PGM_TRMNTN_CD'] == 00]
+                             .groupby(['ZIP_CD', 'year']).size().reset_index(name='active_count')).reset_index()
+
+active_hospitals_per_year = active_hospitals_per_year[active_hospitals_per_year["ZIP_CD"].isin(hospitals_closed['ZIP_CD_x'])]
+
+# Created pivot table with columns for ZIP_CD, 2016, 2017, 2018, 2019, each summarizing number of active hospitals
+pivoted_df = active_hospitals_per_year.pivot(index='ZIP_CD', columns='year', values='active_count').reset_index()
+
+# To view entire dataframes
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
+# Filling 0 for NAs
+pivoted_df = pivoted_df.fillna(0)
+
+# Dataframe shows zipcodes that saw either an increase or steady number
+increased_hospitals = pivoted_df[(pivoted_df[2017] >= pivoted_df[2016]) | 
+                                 (pivoted_df[2018] >= pivoted_df[2017]) |
+                                 (pivoted_df[2019] >= pivoted_df[2018])]
+
+# List of unique ZIP_CD in above dataframe
+no_decrease_zips = increased_hospitals['ZIP_CD'].unique()
+
+# Merges no_decrease_zips with last_active_years to filter out (exclude) zipcodes that saw increase or no change during year of termination/disappearance/closure (final df is filtered_decreases_zips_df)
+merged_df = last_active_years.merge(pivoted_df, how='left', left_on='zip', right_on='ZIP_CD')
+filtered_decreases_zips_df = merged_df[~((merged_df['year_terminated_disappear'] == 2016) & (merged_df[2017] >= merged_df[2016]) |
+                          (merged_df['year_terminated_disappear'] == 2017) & (merged_df[2018] >= merged_df[2017]) |
+                          (merged_df['year_terminated_disappear'] == 2018) & (merged_df[2019] >= merged_df[2018]))]
+
+# Filtering master dataframe (combined_df_final) for only those hospitals that are in filtered_decreases_zips_df
+merg_aq = combined_df_final[(combined_df_final['FAC_NAME'].isin(filtered_decreases_zips_df['FAC_NAME']))]
+
+# Dataframe with total number of hospitals in the corrected list of hospitals 
+provider_count = merg_aq._groupby('FAC_NAME') \
+                        .agg(NUM_CMS=('PRVDR_NUM', 'count')) \
+                        .reset_index()_
+
+# Dataframe with total number of hospitals that could be mergers of acquisitions
+provider_count_1 = provider_count[(provider_count['NUM_CMS'] > 1)]
+
+### b
+print("The number of hospitals in the corrected list is (Answer to 3b)", len(provider_count))
+```
+
+## Q3c
+```{python}
+### c
+provider_count.sort_values(by='FAC_NAME', ascending=True)
+print("The answer to 3c is:")
+print(provider_count.head(10))
+
+# Used BingChat with the following query "how do I create a pivot table that has a column for ZIP_CD and each year?"
+# Used BingChat with the following query "how do I check that the increase/no change in active hospitals coincides with year of termination in that zipcode"
+```
+
+# Section 3: Download Census zip code shapefile (10 pt)  Partner 1
+1. 
+```{python}
+import zipfile
+
+zip_file_path = "/Users/charismalambert/Downloads/gz_2010_us_860_00_500k.zip"
+extraction_path = "extracted_files"
+
+with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+    zip_ref.extractall(extraction_path)
+
+files = os.listdir(extraction_path)
+
+file_info = []
+
+for file in files:
+    file_path = os.path.join(extraction_path, file)
+    file_size = os.path.getsize(file_path)  
+    file_type = os.path.splitext(file)[1] 
+    
+    file_info.append({
+        "file_name": file,
+        "file_type": file_type,
+        "file_size_kb": file_size / 1024 
+    })
+
+print("Answer to part b:")
+for info in file_info:
+    print(f" File: {info['file_name']}, Type: {info['file_type']}, Size: {info['file_size_kb']:.2f} KB")
+
+# Citation:  Ran ChatGPT query on how to extract files from a zip file using Python and these are the steps it gave me. 
+```
+
+    a. The five file types are: 
+    .xml: Metadata file describing the dataset.
+    .shx: An index file that provides quick access to the shapes within the .shp file.
+    .shp: Contains geographic shapes representing spatial data.
+    .prj: Contains coordinate system and projection information.
+    .dbf: Stores tabular attribute data associated with each spatial feature inn the .shp file.
+
+    b. File: gz_2010_us_860_00_500k.prj, Type: .prj, Size: 0.16 KB
+    File: gz_2010_us_860_00_500k.shx, Type: .shx, Size: 258.85 KB
+    File: gz_2010_us_860_00_500k.shp, Type: .shp, Size: 817914.63 KB
+    File: gz_2010_us_860_00_500k.dbf, Type: .dbf, Size: 6274.88 KB
+    File: gz_2010_us_860_00_500k.xml, Type: .xml, Size: 15.27 KB
+
 2. 
 ```{python}
 # load zipcode shapefile
@@ -175,31 +351,389 @@ hospitals_by_zip = short_term_16["ZIP_CD"].value_counts().reset_index()
 hospitals_by_zip.columns = ["zip_code", "total_hospitals"]
 hospitals_by_zipTX = texas_zip.merge(hospitals_by_zip, left_on = "ZCTA5", right_on = "zip_code", how = "left")
 
-# cloropleth of hospitals by zp code in Texas
+# choropleth of hospitals by zp code in Texas
 hospitals_by_zipTX = hospitals_by_zipTX.to_crs("EPSG:5070")
 hospitals_by_zipTX["area_km2"] = hospitals_by_zipTX.area/1000000
 hospitals_by_zipTX.plot(column = "area_km2", legend = True).set_axis_off()
+
+#Citation: Ran ChatGPT query on .prj file to get the .to_crs conversion. 
 ```
 
-## Calculate zip code’s distance to the nearest hospital (20 pts) (*) Partner 2
+# Section 4: Calculate zip code’s distance to the nearest hospital (20 pts) (*) Partner 2
+## Q1
+```{python}
+# Create the GeoDataFrame
+zips_all_centroids = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+print(zips_all_centroids.info())
+```
 
-1. 
-2. 
-3. 
-4. 
-    a.
-    b.
-    c.
-5. 
-    a.
-    b.
-    c.
-    
-## Effects of closures on access in Texas (15 pts) Partner 1
+###### Dimensions of the GeoDataFrame: 33120 rows, 6 columns (variables)
+###### Each column and what they capture: 
+##### 1. GEO_ID: geographic identifier that uniquely identifies an area
+##### 2. ZCTA5: Zip Code (first 5 digits with leading 0)
+##### 3. NAME: the same as ZCTA5
+##### 4. LSAD: the way in which each area is named (all are ZCTA5)
+##### 5. CENSUSAREA: the area of region 
+##### 6. geometry: the shape of region
 
+## Q2
+```{python}
+
+# Filter Texas zip codes 
+zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
+
+print("Number of unique ZipCodes for Texas = ", len(zips_texas_centroids.ZCTA5.unique()))
+
+# Filter Texas and bordering states zipcodes
+zips_texas_borderstates_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0870") | (zips_all_centroids['GEO_ID'] == "8600000US0871") | (zips_all_centroids['GEO_ID'] >= "8600000US0873") & (zips_all_centroids['GEO_ID'] <= "8600000US0875") | (zips_all_centroids['GEO_ID'] >= "8600000US0877") & (zips_all_centroids['GEO_ID'] <= "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0730") | (zips_all_centroids['GEO_ID'] == "8600000US0731") | (zips_all_centroids['GEO_ID'] >= "8600000US0734") & (zips_all_centroids['GEO_ID'] <= "8600000US0741") | (zips_all_centroids['GEO_ID'] >= "8600000US0743") & (zips_all_centroids['GEO_ID'] <= "8600000US0749") | (zips_all_centroids['GEO_ID'] >= "8600000US0716") & (zips_all_centroids['GEO_ID'] <= "8600000US0729") | (zips_all_centroids['GEO_ID'] >= "8600000US0700") & (zips_all_centroids['GEO_ID'] <= "8600000US0701") | (zips_all_centroids['GEO_ID'] >= "8600000US0703") & (zips_all_centroids['GEO_ID'] <= "8600000US0708") | (zips_all_centroids['GEO_ID'] >= "8600000US0710") & (zips_all_centroids['GEO_ID'] <= "8600000US0714") ] 
+
+print("Number of unique ZipCodes for Texas and Neighboring states = ", len(zips_texas_borderstates_centroids.ZCTA5.unique()))
+```
+
+### EXTRA CREDIT - Section 4, Q2 with function attempt
+```{python}
+# Loading Libraries
+import geopandas as gpd
+import warnings
+warnings.filterwarnings("ignore")
+
+# Create the GeoDataFrame
+zips_all_centroids = gpd.read_file("C:/Users/prash/Downloads/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp")
+
+# Filter Texas zip codes 
+zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
+
+print("Number of unique ZipCodes for Texas and Neighboring states = ", len(zips_texas_centroids.ZCTA5.unique()))
+
+# Texas and bordering states
+zips_texas_borderstates_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0870") | (zips_all_centroids['GEO_ID'] == "8600000US0871") | (zips_all_centroids['GEO_ID'] >= "8600000US0873") & (zips_all_centroids['GEO_ID'] <= "8600000US0875") | (zips_all_centroids['GEO_ID'] >= "8600000US0877") & (zips_all_centroids['GEO_ID'] <= "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0730") | (zips_all_centroids['GEO_ID'] == "8600000US0731") | (zips_all_centroids['GEO_ID'] >= "8600000US0734") & (zips_all_centroids['GEO_ID'] <= "8600000US0741") | (zips_all_centroids['GEO_ID'] >= "8600000US0743") & (zips_all_centroids['GEO_ID'] <= "8600000US0749") | (zips_all_centroids['GEO_ID'] >= "8600000US0716") & (zips_all_centroids['GEO_ID'] <= "8600000US0729") | (zips_all_centroids['GEO_ID'] >= "8600000US0700") & (zips_all_centroids['GEO_ID'] <= "8600000US0701") | (zips_all_centroids['GEO_ID'] >= "8600000US0703") & (zips_all_centroids['GEO_ID'] <= "8600000US0708") | (zips_all_centroids['GEO_ID'] >= "8600000US0710") & (zips_all_centroids['GEO_ID'] <= "8600000US0714") ] 
+
+print("Number of unique ZipCodes for Texas and Neighboring states = ", len(zips_texas_borderstates_centroids.ZCTA5.unique()))
+
+from shapely.geometry import Polygon 
+# Function to check if two polygons intersect 
+def polygons_intersect(poly1, poly2): 
+    return poly1.intersects(poly2)
+
+# Creating Texas zipcodes dataframe
+texas_combined = zips_texas_centroids.unary_union 
+
+# Creating Texas prefixes dataframe
+texas_prefixes = zips_texas_centroids.GEO_ID
+
+# Creating Texas and Bordering zipcodes dataframe
+bordering_prefixes = zips_texas_borderstates_centroids.GEO_ID
+
+# Creating Bordering zipcodes dataframe
+bordering_states_only = zips_texas_borderstates_centroids[~zips_texas_borderstates_centroids['GEO_ID'].isin(texas_prefixes)]
+
+# Creating Texas and Bordering zipcodes dataframe
+bordering_states_only['intersects_texas'] = bordering_states_only['geometry'].apply(
+    lambda x: polygons_intersect(texas_combined, x)
+)
+
+# Filter for those that intersect
+intersecting_zips = bordering_states_only[bordering_states_only['intersects_texas']]
+
+print(intersecting_zips)
+
+print(f"Intersecting zip codes: {intersecting_zips.GEO_ID.nunique()}")
+
+# USed BingChat to aid in creating the function
+```
+
+## Q3
+```{python}
+# Filter Texas Border States zip codes 
+zips_texas_borderstates_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0870") | (zips_all_centroids['GEO_ID'] == "8600000US0871") | (zips_all_centroids['GEO_ID'] >= "8600000US0873") & (zips_all_centroids['GEO_ID'] <= "8600000US0875") | (zips_all_centroids['GEO_ID'] >= "8600000US0877") & (zips_all_centroids['GEO_ID'] <= "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0730") | (zips_all_centroids['GEO_ID'] == "8600000US0731") | (zips_all_centroids['GEO_ID'] >= "8600000US0734") & (zips_all_centroids['GEO_ID'] <= "8600000US0741") | (zips_all_centroids['GEO_ID'] >= "8600000US0743") & (zips_all_centroids['GEO_ID'] <= "8600000US0749") | (zips_all_centroids['GEO_ID'] >= "8600000US0716") & (zips_all_centroids['GEO_ID'] <= "8600000US0729") | (zips_all_centroids['GEO_ID'] >= "8600000US0700") & (zips_all_centroids['GEO_ID'] <= "8600000US0701") | (zips_all_centroids['GEO_ID'] >= "8600000US0703") & (zips_all_centroids['GEO_ID'] <= "8600000US0708") | (zips_all_centroids['GEO_ID'] >= "8600000US0710") & (zips_all_centroids['GEO_ID'] <= "8600000US0714") ] 
+
+# Filter Texas zip codes
+zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
+
+# Adding leading 0's in combined_df_final['ZIP_CD']
+combined_df_final['ZIP_CD'] = combined_df_final['ZIP_CD'].str.zfill(6)
+
+# Dropping last digit from combined_df_final['ZIP_CD']
+combined_df_final['ZIP_CD'] = combined_df_final['ZIP_CD'].str[:-1]
+#print(combined_df_final[['ZIP_CD', 'PGM_TRMNTN_CD', 'year']])
+
+# Creating dataframe that has only the zip codes in texas and bordering hospitals that each have at least one hospital
+zips_tb_with_hosp = combined_df_final[
+    combined_df_final['ZIP_CD'].isin(zips_texas_borderstates_centroids['ZCTA5']) & 
+    (combined_df_final["year"] == 2016)]
+
+zips_tb_with_hosp = zips_tb_with_hosp.groupby('ZIP_CD').agg(number_of_hospitals =('PRVDR_NUM', 'count')).reset_index()
+zips_tb_with_hosp = zips_tb_with_hosp[zips_tb_with_hosp['number_of_hospitals'] >= 1]
+
+zips_tb_with_hosp_cent = zips_texas_borderstates_centroids[zips_texas_borderstates_centroids['ZCTA5'].isin(zips_tb_with_hosp['ZIP_CD'])]
+
+# Creating ZCTA5 in combined_df_final, which has all hospital data
+combined_df_final['ZCTA5'] = combined_df_final['ZIP_CD']
+combined_df_final_1 = combined_df_final
+
+# Used an inner merge on ZCTA5
+zips_withhospital_centroids = pd.merge(combined_df_final_1, zips_tb_with_hosp_cent, how='inner', on='ZCTA5')
+print(zips_withhospital_centroids.head(5))
+```
+
+##### I did an inner merge, and merged on the variable 'ZCTA5', for zipcode. 
+
+## Q4a
+```{python}
+# Loading Libraries
+from shapely.geometry import Point, Polygon
+from shapely.ops import nearest_points
+import time
+
+# Making sure all are geodataframes
+if not isinstance(zips_withhospital_centroids, gpd.GeoDataFrame):
+    zips_withhospital_centroids = gpd.GeoDataFrame(zips_withhospital_centroids, geometry='geometry')
+
+if 'geometry' not in zips_withhospital_centroids.columns:
+    zips_withhospital_centroids['geometry'] = zips_withhospital_centroids.apply(
+        lambda row: Point(row['longitude'], row['latitude']), axis=1)
+
+# Ensure they use the same CRS
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=4326)
+zips_withhospital_centroids = gpd.GeoDataFrame(zips_withhospital_centroids, geometry='geometry')
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=4326)
+
+# Subset to 10 ZIP codes for testing
+subset = zips_texas_centroids.head(10)
+subset
+
+# Calculating time for the join with the subset
+def calculate_nearest(row, other_gdf, geom_col='geometry', src_col='ZCTA5'):
+    if other_gdf.empty or row[geom_col] is None:
+        return None, float('inf')
+    other_geom_union = other_gdf.geometry.unary_union
+    nearest_geom = nearest_points(row[geom_col], other_geom_union)[1]
+    nearest_point = other_gdf.loc[other_gdf.geometry == nearest_geom]
+    if nearest_point.empty:
+        return None, float('inf')
+    nearest_zip = nearest_point[src_col].values[0]
+    distance = row[geom_col].distance(nearest_geom)
+    return nearest_zip, distance
+
+start_time = time.time()
+
+subset['nearest_zip'], subset['distance_to_nearest'] = zip(
+    *subset.apply(calculate_nearest, other_gdf=zips_withhospital_centroids, axis=1)
+)
+
+end_time = time.time()
+time_taken = end_time - start_time
+
+print(subset[['ZCTA5', 'nearest_zip', 'distance_to_nearest']])
+print(f"Time taken for subset of 10 ZIP codes: {time_taken} seconds")
+
+total_zip_codes = len(zips_texas_centroids)
+estimated_time = (time_taken / 10) * total_zip_codes
+print(f"Estimated time for the entire dataset: {estimated_time} seconds")
+
+# Used BingChat with the following query: "how do I create a function that calculates the calculate the distance to the nearest zip code with at least one hospital?"
+# Used BingChat with the following query: "how do I measure the time for a spatial join?"
+```
+
+## Q4b
+```{python}
+# Calculating time for join for all zipcodes
+start_time = time.time()
+
+zips_texas_centroids['nearest_zip'], zips_texas_centroids['distance_to_nearest'] = zip(
+    *zips_texas_centroids.apply(calculate_nearest, other_gdf=zips_withhospital_centroids, axis=1)
+)
+
+end_time = time.time()
+time_taken = end_time - start_time
+
+print(zips_texas_centroids[['ZCTA5', 'nearest_zip', 'distance_to_nearest']])
+print(f"Time taken for all ZIP codes: {time_taken} seconds")
+```
+
+##### It takes longer to join all the zips than the estimated time.
+
+## Q4c
+```{python}
+# Ensure they use the same CRS
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=4326)
+zips_withhospital_centroids = gpd.GeoDataFrame(zips_withhospital_centroids, geometry='geometry')
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=4326)
+
+# Q4c
+# in degrees
+distance = gpd.sjoin_nearest(zips_texas_centroids, zips_withhospital_centroids,
+how = 'inner',
+distance_col = 'distance')
+
+# in miles and degrees
+distance['distance_miles'] = distance['distance'] * 69
+print(distance[['ZIP_CD', 'distance_miles', 'distance']].head(5))
+print("Unique entries for distance_miles are",distance['distance_miles'].unique())
+
+# Used BingChat with the following query: "how do I convert degrees in geopatial data to miles?"
+```
+
+##### The original unit of distance is degrees. I multiplied the distance given in degrees by 69 to convert to miles.
+
+## Q5a
+```{python}
+# Creating dataframe with all Texas Zipcodes
+zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
+
+# Ensure both GeoDataFrames use the same coordinate reference system (CRS)
+zips_texas_centroids = zips_texas_centroids.to_crs(epsg=4326)
+zips_withhospital_centroids = zips_withhospital_centroids.to_crs(epsg=4326)
+
+# Perform spatial join to find average distance to the nearest hospitals
+joined = gpd.sjoin_nearest(zips_texas_centroids, zips_withhospital_centroids, how='inner', distance_col='distance')
+joined_1 = joined.groupby('ZIP_CD').agg(average_distance_miles =('distance', 'first')).reset_index()
+
+print(joined_1.head(5))
+
+# Used BingChat with the following query: "how do I check if the dataframes are Geodataframes?"
+```
+
+##### The original unit of distance is degrees.
+
+## Q5b
+```{python}
+# Convert distance from degrees to miles (approximation: 1 degree = 69 miles)
+joined['distance_miles'] = joined['distance'] * 69
+
+# Calculate the average distance for each zip code
+average_distance = joined.groupby('ZIP_CD')['distance_miles'].mean().reset_index()
+average_distance.columns = ['ZIP_CD', 'average_distance_miles']
+
+# Merge the average distances back to the original zip code GeoDataFrame
+zips_texas_centroids['ZIP_CD'] = zips_texas_centroids['ZCTA5']
+zips_texas_centroids = zips_texas_centroids.merge(average_distance, on='ZIP_CD', how='left')
+zips_texas_centroids_1 = zips_texas_centroids.groupby('ZIP_CD').agg(average_distance_miles =('average_distance_miles', 'first')).reset_index()
+
+print(zips_texas_centroids_1.head(10))
+
+print("Unique entries for average_distance_miles are", zips_texas_centroids['average_distance_miles'].unique())
+
+# Used BingChat with the following query: "how do I use something like this to calculate average distance: gpd.sjoin_nearest(zips_texas_centroids, zips_withhospital_centroids, how='inner', distance_col='distance')?"
+```
+
+##### Yes, this makes sense (for the NaNs, assuming that they do not have hospitals), as this table shows the average distance from the centroid of the zipcode to the nearest hospital, which can be used to analyze how accessible hospitals are in Texas zipcodes. 
+
+## Q5c
+```{python}
+# Plot the results
+chart = alt.Chart(zips_texas_centroids).mark_geoshape().encode(
+    color=alt.Color('average_distance_miles:Q', legend=alt.Legend(title="Average Distance to Nearest Hospital (miles)", titleFontSize=8)),
+    tooltip=['ZCTA5', 'average_distance_miles']
+).project(
+    type='identity', reflectY=True
+).properties(
+    title='Average Distance to Nearest Hospital by Zip Code in Texas',
+    width=600,
+    height=300
+).configure_legend(
+    orient='bottom'
+)
+
+chart.display()
+
+# Used BingChat to aid in creating a plot that shows the average distance between hospitals and zipcodes in altair
+# Used BingChat to aid in how to use something like this to calculate average distance: gpd.sjoin_nearest(zips_texas_centroids, zips_withhospital_centroids, how='inner', distance_col='distance')
+```
+
+## Section 5: Effects of closures on access in Texas (15 pts) Partner 1
 1. 
+```{python}
+closures_by_zip = merg_aq.groupby(["FAC_NAME", "ZIP_CD"]).agg(NUM_CMS = ("PRVDR_NUM", "count")).reset_index()
+texas_closures_by_zip = closures_by_zip[closures_by_zip["ZIP_CD"].str.startswith(("75", "76", "77", "78", "79"))].reset_index()
+texas_closures_by_zip
+```
+
 2. 
+```{python}
+import json 
+import plotly.express as px
+
+# load .shp file
+zip_gdf = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
+zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
+
+# export to geojson
+zip_gdf.to_file("zip_codes.geojson", driver = "GeoJSON")
+
+# read geojson file
+zip_gdf = gdp.read_file("zip_codes.geojson")
+
+zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
+print(zip_gdf.head())
+```
+
+```{python}
+import json 
+import plotly.express as px
+
+# load .shp file
+zip_gdf = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
+zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
+
+# export to geojson
+zip_gdf.to_file("zip_codes.geojson", driver = "GeoJSON")
+
+# read geojson file
+zip_gdf = gdp.read_file("zip_codes.geojson")
+
+zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
+zip_and_geo = zip_gdf.merge(texas_closures_by_zip, on = "ZIP_CD", how = "inner")
+
+# export merged geodataframe to geojson file
+zip_and_geo.to_file("texas_zipcodes.geojson", driver = "GeoJSON")
+
+# open geojson file
+with open("texas_zipcodes.geojson") as f:
+    zip_geojson = json.load(f)
+
+# code to choropleth map 
+fig = px.choropleth(
+    zip_and_geo, 
+    geojson=zip_geojson,
+    locations = "ZIP_CD", 
+    featureidkey = "properties.ZIP_CD",
+    color = "NUM_CMS",
+    color_continuous_scale= "blues",
+)
+
+fig.update_geos(
+    fitbounds="locations",  
+    visible=False,          
+    center={"lat": 31.0, "lon": -100.0},  
+    projection_type="albers usa"  
+)
+
+
+fig.show()
+#Citation: ChatGPT query of: how to make choropleth from zip code level data. The query returned the steps from line 657 to 667. Syntax for choropleth found on Stack Overflow thread for the same query.
+
+```
+
+```{python}
+
+```
+
 3. 
+```{python}
+```
+
 4. 
+
+```{python}
+
+```
+
 
 ## Reflecting on the exercise (10 pts) 
+# Section 6
+Partner 1: The "first-pass" method might be misidentifying hospitals, for example a hospital with a temporary closure that is actually still open. One way to do a better job at confirming hospital closures is to cross-reference our findings to state licensing databases and the facility website, there may be a history tab that can help us identify when a change occured. 
+
+Partner 2: I believe that this reflects there has not been too much of a decrease in access to hospitals in Texas zipcodes. In this exercise, one manages to filter out the cases of mergers or aquisitions from the closures, which helps mitigate error. However, this could be further improved if we are given more accurate data on where in particular the hospitals are situated, with latitudinal and longitudinal data on the hospitals themselves alongside that of the zipcode. 
