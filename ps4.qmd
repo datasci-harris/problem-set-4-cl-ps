@@ -752,14 +752,14 @@ texas_zips = all_zips[all_zips["ZCTA5"].str.startswith(("75","76", "77", "78", "
 texas_zips = texas_zips.to_crs(closures_buffered.crs)
 indirectly_affected = gpd.sjoin(texas_zips, closures_buffered, how="left", op="intersects")
 
-filtered_zips['category'] = 'Not Affected' 
-filtered_zips.loc[filtered_zips['zip_code'].isin(closures_df['zip_code']), 'category'] = 'Directly Affected'
-filtered_zips.loc[indirectly_affected['index_right'].notna(), 'category'] = 'Indirectly Affected'
+texas_zips['category'] = 'Not Affected' 
+texas_zips.loc[texas_zips['zip_code'].isin(closures_df['zip_code']), 'category'] = 'Directly Affected'
+texas_zips.loc[indirectly_affected['index_right'].notna(), 'category'] = 'Indirectly Affected'
 
 color_map = {'Directly Affected': 'red', 'Indirectly Affected': 'orange', 'Not Affected': 'lightgrey'}
 
 fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-filtered_zips.plot(column='category', color=filtered_zips['category'].map(color_map), legend=True, ax=ax)
+texas_zips.plot(column='category', color=texas_zips['category'].map(color_map), legend=True, ax=ax)
 
 ax.set_title('Texas Zip Codes Affected by Hospital Closures', fontsize=15)
 ax.set_axis_off()
