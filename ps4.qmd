@@ -693,24 +693,7 @@ texas_closures_by_zip
 
 2. 
 ```{python}
-import json 
-import plotly.express as px
-
-# load .shp file
-zip_gdf = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
-zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
-zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
-
-# export to geojson
-zip_gdf.to_file("zip_codes.geojson", driver = "GeoJSON")
-
-# read geojson file
-zip_gdf = gdp.read_file("zip_codes.geojson")
-
-zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
-```
-
-```{python}
+import geopandas as gdp
 import matplotlib.pyplot as plt
 
 # load .shp file
@@ -721,23 +704,23 @@ zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
 zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
 aggregated_closures = texas_closures_by_zip.groupby('ZIP_CD').agg({'NUM_CMS': 'sum'}).reset_index()
 
+# Merge the GeoDataFrame with the aggregated closures DataFrame
 zip_and_geo = zip_gdf.merge(aggregated_closures, on="ZIP_CD", how="inner")
 
 # Create the choropleth map
 fig, ax = plt.subplots(figsize=(10, 10))
 zip_and_geo.plot(column='NUM_CMS', ax=ax, legend=True, cmap='Blues', edgecolor='black')
 plt.title('Choropleth Map of Closures by ZIP Code')
+
 plt.show()
-#Citation: ChatGPT query of: how to make choropleth from zip code level data. The query returned the steps from line 721 to 730. Syntax for choropleth found on Stack Overflow thread for the same query.
-
-```
-
-```{python}
-
+#Citation: ChatGPT query of: how to make choropleth from zip code level data. The query returned the steps from line 721 to 734. Syntax for choropleth found on Stack Overflow thread for the same query.
 ```
 
 3. 
 ```{python}
+import shapely.geometry import Point
+
+
 ```
 
 4. 
