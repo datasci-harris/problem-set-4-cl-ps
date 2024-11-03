@@ -718,15 +718,52 @@ plt.show()
 
 3. 
 ```{python}
-import shapely.geometry import Point
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
 
+# Load the Texas zip code shapefile
+all_zips = gpd.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
 
+closures_gdf = gpd.GeoDataFrame(
+    texas_closures_by_zip,
+    geometry=gpd.points_from_xy(texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).x), texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).y)),
+    crs='EPSG:4326'
+)
+
+# Create a 10-mile buffer around the affected zip codes 
+texas_closures_by_zip['geometry'] = texas_closures_by_zipgeometry.buffer(10 * 1609.34)
+closures_buffered = texas_closures_by_zip.dissolve().reset_index() 
+
+closures_buffered = closures_buffered.to_crs(all_zipz.crs)
+
+indirectly_affected = gpd.sjoin(all_zips, closures_buffered, how="inner", op="intersects")
+
+num_indirectly_affected_zips = indirectly_affected['ZCTA5'].nunique()
+
+print(f'The number of indirectly affected zip codes in Texas is: {num_indirectly_affected_zips}')
+#Citation: ChatGPT query of: how to create geodataframe with buffer of 10 miles. Query returned steps in line 728 to 737.
 ```
 
 4. 
-
 ```{python}
+texas_zips = all_zips[all_zips["ZCTA5"].str.startswith(("75","76", "77", "78", "79"))]
 
+texas_zips = texas_zips.to_crs(closures_buffered.crs)
+indirectly_affected = gpd.sjoin(texas_zips, closures_buffered, how="left", op="intersects")
+
+filtered_zips['category'] = 'Not Affected' 
+filtered_zips.loc[filtered_zips['zip_code'].isin(closures_df['zip_code']), 'category'] = 'Directly Affected'
+filtered_zips.loc[indirectly_affected['index_right'].notna(), 'category'] = 'Indirectly Affected'
+
+color_map = {'Directly Affected': 'red', 'Indirectly Affected': 'orange', 'Not Affected': 'lightgrey'}
+
+fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+filtered_zips.plot(column='category', color=filtered_zips['category'].map(color_map), legend=True, ax=ax)
+
+ax.set_title('Texas Zip Codes Affected by Hospital Closures', fontsize=15)
+ax.set_axis_off()
+plt.show()
 ```
 
 
