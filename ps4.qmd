@@ -230,46 +230,6 @@ print("The number of hospitals that went through mergers or aquisitions is (Answ
 
 ## Q3b
 ```{python}
-# Grouping by ZIP_CD and year, and summarizing number of active hospitals by filtering for ['PGM_TRMNTN_CD'] == 00
-active_hospitals_per_year = (combined_df_final[combined_df_final['PGM_TRMNTN_CD'] == 00]
-                             .groupby(['ZIP_CD', 'year']).size().reset_index(name='active_count')).reset_index()
-
-active_hospitals_per_year = active_hospitals_per_year[active_hospitals_per_year["ZIP_CD"].isin(hospitals_closed['ZIP_CD_x'])]
-
-# Created pivot table with columns for ZIP_CD, 2016, 2017, 2018, 2019, each summarizing number of active hospitals
-pivoted_df = active_hospitals_per_year.pivot(index='ZIP_CD', columns='year', values='active_count').reset_index()
-
-# To view entire dataframes
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
-
-# Filling 0 for NAs
-pivoted_df = pivoted_df.fillna(0)
-
-# Dataframe shows zipcodes that saw either an increase or steady number
-increased_hospitals = pivoted_df[(pivoted_df[2017] >= pivoted_df[2016]) | 
-                                 (pivoted_df[2018] >= pivoted_df[2017]) |
-                                 (pivoted_df[2019] >= pivoted_df[2018])]
-
-# List of unique ZIP_CD in above dataframe
-no_decrease_zips = increased_hospitals['ZIP_CD'].unique()
-
-# Merges no_decrease_zips with last_active_years to filter out (exclude) zipcodes that saw increase or no change during year of termination/disappearance/closure (final df is filtered_decreases_zips_df)
-merged_df = last_active_years.merge(pivoted_df, how='left', left_on='zip', right_on='ZIP_CD')
-filtered_decreases_zips_df = merged_df[~((merged_df['year_terminated_disappear'] == 2016) & (merged_df[2017] >= merged_df[2016]) |
-                          (merged_df['year_terminated_disappear'] == 2017) & (merged_df[2018] >= merged_df[2017]) |
-                          (merged_df['year_terminated_disappear'] == 2018) & (merged_df[2019] >= merged_df[2018]))]
-
-# Filtering master dataframe (combined_df_final) for only those hospitals that are in filtered_decreases_zips_df
-merg_aq = combined_df_final[(combined_df_final['FAC_NAME'].isin(filtered_decreases_zips_df['FAC_NAME']))]
-
-# Dataframe with total number of hospitals in the corrected list of hospitals 
-provider_count = merg_aq.groupby('FAC_NAME') \
-                        .agg(NUM_CMS=('PRVDR_NUM', 'count')) \
-                        .reset_index()
-
 # Dataframe with total number of hospitals that could be mergers of acquisitions
 provider_count_1 = provider_count[(provider_count['NUM_CMS'] > 1)]
 
@@ -363,7 +323,7 @@ hospitals_by_zipTX.plot(column = "area_km2", legend = True).set_axis_off()
 ## Q1
 ```{python}
 # Create the GeoDataFrame
-zips_all_centroids = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+zips_all_centroids = census_shp
 print(zips_all_centroids.info())
 ```
 
@@ -444,47 +404,8 @@ print(f"Intersecting zip codes: {intersecting_zips.GEO_ID.nunique()}")
 
 ## Q3
 ```{python}
-# Loading Libraries
-import pandas as pd
-import os
-import csv
-import geopandas as gpd
-import warnings
-warnings.filterwarnings("ignore")
-
-# Create the GeoDataFrame
-zips_all_centroids = gpd.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
-
-# Filter Texas Border States zip codes 
-zips_texas_borderstates_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0870") | (zips_all_centroids['GEO_ID'] == "8600000US0871") | (zips_all_centroids['GEO_ID'] >= "8600000US0873") & (zips_all_centroids['GEO_ID'] <= "8600000US0875") | (zips_all_centroids['GEO_ID'] >= "8600000US0877") & (zips_all_centroids['GEO_ID'] <= "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0730") | (zips_all_centroids['GEO_ID'] == "8600000US0731") | (zips_all_centroids['GEO_ID'] >= "8600000US0734") & (zips_all_centroids['GEO_ID'] <= "8600000US0741") | (zips_all_centroids['GEO_ID'] >= "8600000US0743") & (zips_all_centroids['GEO_ID'] <= "8600000US0749") | (zips_all_centroids['GEO_ID'] >= "8600000US0716") & (zips_all_centroids['GEO_ID'] <= "8600000US0729") | (zips_all_centroids['GEO_ID'] >= "8600000US0700") & (zips_all_centroids['GEO_ID'] <= "8600000US0701") | (zips_all_centroids['GEO_ID'] >= "8600000US0703") & (zips_all_centroids['GEO_ID'] <= "8600000US0708") | (zips_all_centroids['GEO_ID'] >= "8600000US0710") & (zips_all_centroids['GEO_ID'] <= "8600000US0714") ] 
-
 # Filter Texas zip codes
 zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
-
-# Importing health data and filtering PRVDR_CTGRY_CD == 1 and PRVDR_CTGRY_SBTYP_CD == 1  
-base_path = r"/Users/charismalambert/Downloads"
-  
-health_path_16 = os.path.join(base_path, "pos2016.csv")
-health_data_16 = pd.read_csv(health_path_16, dtype={'ZIP_CD': str})
-short_term_16 = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
-short_term_16["year"] = 2016
-
-base_path = r"/Users/charismalambert/Downloads"
-  
-health_path_17 = os.path.join(base_path, "pos2017.csv")
-health_data_17 = pd.read_csv(health_path_17, dtype={'ZIP_CD': str})
-short_term_17 =  health_data_17[(health_data_17["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_17["PRVDR_CTGRY_CD"] == 1)]
-short_term_17["year"] = 2017
-
-health_path_18 = os.path.join(base_path, "pos2018.csv")
-health_data_18 = pd.read_csv(health_path_18, dtype={'ZIP_CD': str}, encoding='latin1')
-short_term_18 = health_data_18[(health_data_18["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_18["PRVDR_CTGRY_CD"] == 1)]
-short_term_18["year"] = 2018
-
-health_path_19 = os.path.join(base_path, "pos2019.csv")
-health_data_19 = pd.read_csv(health_path_19, dtype={'ZIP_CD': str}, encoding='latin1')
-short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
-short_term_19["year"] = 2019
 
 # Concatanating into combined_df_final and selecting required variables
 combined_df = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index=True)
@@ -697,7 +618,7 @@ import geopandas as gdp
 import matplotlib.pyplot as plt
 
 # load .shp file
-zip_gdf = gdp.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+zip_gdf = census_shp
 zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
 zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
 print("ZIP_GDF:", zip_gdf)
