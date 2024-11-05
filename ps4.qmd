@@ -20,7 +20,7 @@ include-before-body:
 ---
 
 IMPORTANT NOTE 1:
-Our qmd was able to knit to show the code and output from Section 1 Q1 until Section 5 Q1. Section 5 Q2 onwards, the kernal kept crashing for on partners’ systems. Thus, we wrote to Professor Maggie Shi, Professor Peter Ganong, and TA Ozzy Houck. We were instructed to comment out the codes of Section 5. They had also mentioned that while grading, the grader should run these codes on their system, and if it runs, we would get full credit, and if the output does not fully match the solutions, we would get partial credit.  The codes for the following questions have been commented out as per these guidelines. 
+Our qmd was able to knit to show the code and output from Section 1 Q1 until Section 5 Q1. Section 5 Q2 onwards, the kernal kept crashing for on partners’ systems. Thus, we wrote to Professor Maggie Shi, Professor Peter Ganong, and TA Ozzy Houck. We were instructed to comment out the codes of Section 5 Q2-Q4. They had also mentioned that while grading, the grader should run these codes on their system, and if it runs, we would get full credit, and if the output does not fully match the solutions, we would get partial credit.  The codes for the following questions have been commented out as per these guidelines. 
 
 IMPORTANT NOTE 2: 
 With reference to the following response from Professor Maggie Shi to our Ed Post, we have reduced the number of times we have read the file in our latest qmd so that running the code takes up less memory:
