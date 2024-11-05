@@ -404,8 +404,36 @@ print(f"Intersecting zip codes: {intersecting_zips.GEO_ID.nunique()}")
 
 ## Q3
 ```{python}
+# Filter Texas Border States zip codes 
+zips_texas_borderstates_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0870") | (zips_all_centroids['GEO_ID'] == "8600000US0871") | (zips_all_centroids['GEO_ID'] >= "8600000US0873") & (zips_all_centroids['GEO_ID'] <= "8600000US0875") | (zips_all_centroids['GEO_ID'] >= "8600000US0877") & (zips_all_centroids['GEO_ID'] <= "8600000US0885") | (zips_all_centroids['GEO_ID'] == "8600000US0730") | (zips_all_centroids['GEO_ID'] == "8600000US0731") | (zips_all_centroids['GEO_ID'] >= "8600000US0734") & (zips_all_centroids['GEO_ID'] <= "8600000US0741") | (zips_all_centroids['GEO_ID'] >= "8600000US0743") & (zips_all_centroids['GEO_ID'] <= "8600000US0749") | (zips_all_centroids['GEO_ID'] >= "8600000US0716") & (zips_all_centroids['GEO_ID'] <= "8600000US0729") | (zips_all_centroids['GEO_ID'] >= "8600000US0700") & (zips_all_centroids['GEO_ID'] <= "8600000US0701") | (zips_all_centroids['GEO_ID'] >= "8600000US0703") & (zips_all_centroids['GEO_ID'] <= "8600000US0708") | (zips_all_centroids['GEO_ID'] >= "8600000US0710") & (zips_all_centroids['GEO_ID'] <= "8600000US0714") ] 
+
 # Filter Texas zip codes
 zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
+
+# Importing health data and filtering PRVDR_CTGRY_CD == 1 and PRVDR_CTGRY_SBTYP_CD == 1  
+base_path = r"/Users/charismalambert/Downloads"
+  
+health_path_16 = os.path.join(base_path, "pos2016.csv")
+health_data_16 = pd.read_csv(health_path_16, dtype={'ZIP_CD': str})
+short_term_16 = health_data_16[(health_data_16["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_16["PRVDR_CTGRY_CD"] == 1)]
+short_term_16["year"] = 2016
+
+base_path = r"/Users/charismalambert/Downloads"
+  
+health_path_17 = os.path.join(base_path, "pos2017.csv")
+health_data_17 = pd.read_csv(health_path_17, dtype={'ZIP_CD': str})
+short_term_17 =  health_data_17[(health_data_17["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_17["PRVDR_CTGRY_CD"] == 1)]
+short_term_17["year"] = 2017
+
+health_path_18 = os.path.join(base_path, "pos2018.csv")
+health_data_18 = pd.read_csv(health_path_18, dtype={'ZIP_CD': str}, encoding='latin1')
+short_term_18 = health_data_18[(health_data_18["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_18["PRVDR_CTGRY_CD"] == 1)]
+short_term_18["year"] = 2018
+
+health_path_19 = os.path.join(base_path, "pos2019.csv")
+health_data_19 = pd.read_csv(health_path_19, dtype={'ZIP_CD': str}, encoding='latin1')
+short_term_19 = health_data_19[(health_data_19["PRVDR_CTGRY_SBTYP_CD"] == 1) & (health_data_19["PRVDR_CTGRY_CD"] == 1)]
+short_term_19["year"] = 2019
 
 # Concatanating into combined_df_final and selecting required variables
 combined_df = pd.concat([short_term_16, short_term_17, short_term_18, short_term_19], ignore_index=True)
