@@ -19,6 +19,18 @@ include-before-body:
     }
 ---
 
+IMPORTANT NOTE 1:
+Our qmd was able to knit to show the code and output from Section 1 Q1 until Section 5 Q1. Section 5 Q2 onwards, the kernal kept crashing for on partners’ systems. Thus, we wrote to Professor Maggie Shi, Professor Peter Ganong, and TA Ozzy Houck. We were instructed to comment out the codes of Section 5. They had also mentioned that while grading, the grader should run these codes on their system, and if it runs, we would get full credit, and if the output does not fully match the solutions, we would get partial credit.  The codes for the following questions have been commented out as per these guidelines. 
+
+IMPORTANT NOTE 2: 
+With reference to the following response from Professor Maggie Shi to our Ed Post, we have reduced the number of times we have read the file in our latest qmd so that running the code takes up less memory:
+
+"Ozzy took a look at your submission this morning and had the following comment: I tried to run Charisma and Prashanthi's code and got an error in the sections they were having trouble in. I think their issue was partially that they kept re-reading in the data under different names and so I'm guessing the kernel was crashing because they ran out of memory.
+
+If you can fix the code only to improve memory usage and can get it to knit, you can resubmit. Otherwise the graders will just grade based on your original submission. I'll have @Ozzy  re-open the submission for you, which will close at 11:59."
+
+Our kernels are still crashing when we run Section 5, but we are hoping that this updated code has a better chance at running on your system. We have replied in a post on Ed discussion on the initial thread. Thanks for the help!
+
 **PS4:** Due Sat Nov 2 at 5:00PM Central. Worth 100 points. 
 1. This problem set is a paired problem set.
 2. Play paper, scissors, rock to determine who goes first. Call that person Partner 1.
@@ -352,14 +364,6 @@ print("Number of unique ZipCodes for Texas and Neighboring states = ", len(zips_
 
 ### EXTRA CREDIT - Section 4, Q2 with function attempt
 ```{python}
-# Loading Libraries
-import geopandas as gpd
-import warnings
-warnings.filterwarnings("ignore")
-
-# Create the GeoDataFrame
-zips_all_centroids = gpd.read_file("C:/Users/prash/Downloads/gz_2010_us_860_00_500k/gz_2010_us_860_00_500k.shp")
-
 # Filter Texas zip codes 
 zips_texas_centroids = zips_all_centroids[ (zips_all_centroids['GEO_ID'] >= "8600000US0750") & (zips_all_centroids['GEO_ID'] < "8600000US0800") | (zips_all_centroids['GEO_ID'] == "8600000US0733") | (zips_all_centroids['GEO_ID'] == "8600000US0718") | (zips_all_centroids['GEO_ID'] == "8600000US0885") ] 
 
@@ -642,78 +646,78 @@ print(texas_closures_by_zip)
 
 2. 
 ```{python}
-import geopandas as gdp
-import matplotlib.pyplot as plt
+# import geopandas as gdp
+# import matplotlib.pyplot as plt
 
-# load .shp file
-zip_gdf = census_shp
-zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
-zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
-print("ZIP_GDF:", zip_gdf)
+# # load .shp file
+# zip_gdf = census_shp
+# zip_gdf = zip_gdf[["ZCTA5", "geometry"]]
+# zip_gdf = zip_gdf.rename(columns= {"ZCTA5": "ZIP_CD"})
+# print("ZIP_GDF:", zip_gdf)
 
-zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
-aggregated_closures = texas_closures_by_zip.groupby('ZIP_CD').agg({'NUM_CMS': 'sum'}).reset_index() # Query Corrected
+# zip_gdf["ZIP_CD"] = zip_gdf["ZIP_CD"].astype(str)
+# aggregated_closures = texas_closures_by_zip.groupby('ZIP_CD').agg({'NUM_CMS': 'sum'}).reset_index() # Query Corrected
 
-# Merge the GeoDataFrame with the aggregated closures DataFrame
-zip_and_geo = zip_gdf.merge(aggregated_closures, on="ZIP_CD", how="inner")  # Query Corrected
+# # Merge the GeoDataFrame with the aggregated closures DataFrame
+# zip_and_geo = zip_gdf.merge(aggregated_closures, on="ZIP_CD", how="inner")  # Query Corrected
 
-# Create the choropleth map
-fig, ax = plt.subplots(figsize=(10, 10))
-zip_and_geo.plot(column='NUM_CMS', ax=ax, legend=True, cmap='Blues', edgecolor='black')
-plt.title('Choropleth Map of Closures by ZIP Code')
+# # Create the choropleth map
+# fig, ax = plt.subplots(figsize=(10, 10))
+# zip_and_geo.plot(column='NUM_CMS', ax=ax, legend=True, cmap='Blues', edgecolor='black')
+# plt.title('Choropleth Map of Closures by ZIP Code')
 
-plt.show()
+# plt.show()
 #Citation: For Section 5, Q2-4 I was unable to run and edit because my kernel kept crashing. I ran my code throguh ChatGPT and explained in my query the goal of each section and to correct for potiential error messages. The query corrected lines have been commented "query corrected." I have made a post to Ed and sent an email for help / potiential solution to complete Section 5 and submit for grading. 
 ```
 
 3. 
 ```{python}
-import geopandas as gpd
-import pandas as pd
-from shapely.geometry import Point
+# import geopandas as gpd
+# import pandas as pd
+# from shapely.geometry import Point
 
-# Load the Texas zip code shapefile
-all_zips = gpd.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
+# # Load the Texas zip code shapefile
+# all_zips = gpd.read_file("/Users/charismalambert/Downloads/gz_2010_us_860_00_500k")
 
-closures_gdf = gpd.GeoDataFrame(
-    texas_closures_by_zip,
-    geometry=gpd.points_from_xy(texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).x), texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).y)),
-    crs='EPSG:4326'
-)  # Query Corrected
+# closures_gdf = gpd.GeoDataFrame(
+#     texas_closures_by_zip,
+#     geometry=gpd.points_from_xy(texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).x), texas_closures_by_zip["ZIP_CD"].apply(lambda x: Point(x, 0).y)),
+#     crs='EPSG:4326'
+# )  # Query Corrected
 
-# Create a 10-mile buffer around the affected zip codes 
-texas_closures_by_zip['geometry'] = texas_closures_by_zipgeometry.buffer(10 * 1609.34) 
-closures_buffered = texas_closures_by_zip.dissolve().reset_index()  # Query Corrected
-closures_buffered = gpd.GeoDataFrame(closures_buffered)  # Query Corrected
+# # Create a 10-mile buffer around the affected zip codes 
+# texas_closures_by_zip['geometry'] = texas_closures_by_zipgeometry.buffer(10 * 1609.34) 
+# closures_buffered = texas_closures_by_zip.dissolve().reset_index()  # Query Corrected
+# closures_buffered = gpd.GeoDataFrame(closures_buffered)  # Query Corrected
 
-indirectly_affected = gpd.sjoin(all_zips, closures_buffered, how="inner", op="intersects")  # Query Corrected
-num_indirectly_affected_zips = indirectly_affected['ZCTA5'].nunique()
+# indirectly_affected = gpd.sjoin(all_zips, closures_buffered, how="inner", op="intersects")  # Query Corrected
+# num_indirectly_affected_zips = indirectly_affected['ZCTA5'].nunique()
 
-print(f'The number of indirectly affected zip codes in Texas is: {num_indirectly_affected_zips}')
+# print(f'The number of indirectly affected zip codes in Texas is: {num_indirectly_affected_zips}')
 #Citation: For Section 5, Q2-4 I was unable to run and edit because my kernel kept crashing. I ran my code throguh ChatGPT and explained in my query the goal of each section and to correct for potiential error messages. The query corrected lines have been commented "query corrected." I have made a post to Ed and sent an email for help / potiential solution to complete Section 5 and submit for grading. 
 ```
 
 4. 
 ```{python}
-texas_zips = all_zips[all_zips["ZCTA5"].str.startswith(("75","76", "77", "78", "79"))]
-texas_zips = texas_zips.rename(columns = {"ZCTA5": "ZIP_CD"})
+# texas_zips = all_zips[all_zips["ZCTA5"].str.startswith(("75","76", "77", "78", "79"))]
+# texas_zips = texas_zips.rename(columns = {"ZCTA5": "ZIP_CD"})
 
-texas_zips = texas_zips.to_crs(closures_buffered.crs)
-indirectly_affected = gpd.sjoin(texas_zips, closures_buffered, how="left", op="intersects")  # Query Corrected
+# texas_zips = texas_zips.to_crs(closures_buffered.crs)
+# indirectly_affected = gpd.sjoin(texas_zips, closures_buffered, how="left", op="intersects")  # Query Corrected
 
-texas_zips['category'] = 'Not Affected' 
+# texas_zips['category'] = 'Not Affected' 
 
-texas_zips.loc[texas_zips['ZIP_CD'].isin(texas_closures_by_zip['ZIP_CD']), 'category'] = 'Directly Affected'
-texas_zips.loc[indirectly_affected['index_right'].notna(), 'category'] = 'Indirectly Affected' # Query Corrected
+# texas_zips.loc[texas_zips['ZIP_CD'].isin(texas_closures_by_zip['ZIP_CD']), 'category'] = 'Directly Affected'
+# texas_zips.loc[indirectly_affected['index_right'].notna(), 'category'] = 'Indirectly Affected' # Query Corrected
 
-color_map = {'Directly Affected': 'blue', 'Indirectly Affected': 'red', 'Not Affected': 'green'}
+# color_map = {'Directly Affected': 'blue', 'Indirectly Affected': 'red', 'Not Affected': 'green'}
 
-fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-texas_zips.plot(column='category', color=texas_zips['category'].map(color_map), legend=True, ax=ax) # Query Corrected
+# fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+# texas_zips.plot(column='category', color=texas_zips['category'].map(color_map), legend=True, ax=ax) # Query Corrected
 
-ax.set_title('Texas Zip Codes Affected by Hospital Closures', fontsize=15)
-ax.set_axis_off()
-plt.show()
+# ax.set_title('Texas Zip Codes Affected by Hospital Closures', fontsize=15)
+# ax.set_axis_off()
+# plt.show()
 
 #Citation: For Section 5, Q2-4 I was unable to run and edit because my kernel kept crashing. I ran my code throguh ChatGPT and explained in my query the goal of each section and to correct for potiential error messages. The query corrected lines have been commented "query corrected." I have made a post to Ed and sent an email for help / potiential solution to complete Section 5 and submit for grading. 
 ```
